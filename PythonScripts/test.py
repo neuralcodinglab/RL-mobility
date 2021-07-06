@@ -1,4 +1,4 @@
-import math
+#import math
 import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ print(environment.client)
 end, reward, state_raw = environment.reset()
 
 # Create window to display the frames
-disp = Window(windowname='Hallway', size=(600,600))
+disp = utils.Window(windowname='Hallway', size=(600,600))
 if environment.client:
     disp.start()
 

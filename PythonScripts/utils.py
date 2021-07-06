@@ -20,7 +20,7 @@ class Window:
     def show(self):
         while not self.stopped:
             img = cv2.resize(self.frame, self._size)
-            cv2.imshow(self._windowname, self.frame)
+            cv2.imshow(self._windowname, img)
             key = cv2.waitKey(1)
             if key != -1:
                 self.keypress = key
