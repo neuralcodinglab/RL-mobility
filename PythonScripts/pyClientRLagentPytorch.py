@@ -19,24 +19,8 @@ class Environment:
         self._send(1, 0)
         return self._receive()
 
-    def reset_val(self):
-        self._send(2, 0)
-        return self._receive()
-
-    def reset_test(self):
-        self._send(3, 0)
-        return self._receive()
-
     def step(self, action):
         self._send(4, action)
-        return self._receive()
-
-    def step_val(self, action):
-        self._send(5, action)
-        return self._receive()
-
-    def step_test(self, action):
-        self._send(6, action)
         return self._receive()
 
     def state2image(self, state):

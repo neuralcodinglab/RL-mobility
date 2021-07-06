@@ -34,7 +34,7 @@ class Window:
         self.stopped = True
 
 class PhospheneSimulator(object):
-    def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.8, aperture=.66, sigma=0.8, custom_grid=None):
+    def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.9, aperture=.66, sigma=0.8, custom_grid=None):
         """Phosphene simulator class to create gaussian-based phosphene simulations from activation mask
         on __init__, provide custom phosphene grid or use the grid parameters to create one
         - aperture: receptive field of each phosphene (uses dilation of the activation mask to achieve this)

@@ -55,7 +55,10 @@ namespace umu7.Neuromatics.Scripts.Utils
             appData.Wall = (byte) int.Parse(wallField.text);
         }
 
-
+        public void ChangeComplexity()
+        {
+            appData.Complex = complexToggle.isOn;
+        }
 
         public void StartServer()
         {

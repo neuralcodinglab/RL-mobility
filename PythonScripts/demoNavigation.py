@@ -1,10 +1,5 @@
-#import math
-import random
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import ImageGrid
 import cv2
-from PIL import Image
 
 import pyClientRLagentPytorch
 import utils
@@ -27,15 +22,40 @@ if environment.client:
     disp.start()
 
 
+class Simulator():
+
+    def __init__(self):
+        self.low_res  = utils.PhospheneSimulator(phosphene_resolution=(26,26),sigma=1.2)
+        self.high_res = utils.PhospheneSimulator(phosphene_resolution=(60,60),sigma=1.2)
+        self.sim_mode = 0
+
+    def __call__(self,frame):
+
+        if self.sim_mode==0:
+            return frame[:,:,::-1].astype('uint8')
+        elif self.sim_mode == 1:
+            frame = cv2.resize(frame, (480,480))
+            contours = cv2.Canny(frame,35,70)
+            phosphenes = self.low_res(contours)
+            return (255*phosphenes/phosphenes.max()).astype('uint8')
+
+        elif self.sim_mode == 2:
+            frame = cv2.resize(frame, (480,480))
+            contours = cv2.Canny(frame,35,70)
+            phosphenes = self.high_res(contours)
+            return (255*phosphenes/phosphenes.max()).astype('uint8')
+
+simulator = Simulator()
+
 while disp.stopped == False:
 
+    # Display current state
+    frame = environment.state2usableArray(state_raw)
+    frame = simulator(frame)
+    disp.frame = frame
 
-
-    image_array = environment.state2usableArray(state_raw)
-    disp.frame = image_array[:,:,::-1].astype('uint8')
-
+    # Get key
     key = disp.getKey()
-
     if key == ord('w'):
         end, reward, state_raw = environment.step(0)
         print(reward)
@@ -52,20 +72,20 @@ while disp.stopped == False:
         end, reward, state_raw = environment.reset()
         print(reward)
 
+    if key == 49:
+        simulator.sim_mode = 0
+
+    if key == 50:
+        simulator.sim_mode = 1
+
+    if key == 51:
+        simulator.sim_mode = 2
+
     if key == ord('q'):
         break
 
 
     time.sleep(0.01)
-    # end, reward, state_raw = environment.step(0)
+
 
 disp.stop()
-
-#
-# for i in range(10):
-#     end, reward, state_raw = environment.step(0)
-#     environment.state2usableArray(state_raw)
-#     image_array = environment.state2usableArray(state_raw)
-#     display.frame = image_array
-#     time.sleep(0.2)
-# display.stop()
