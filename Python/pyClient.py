@@ -1,7 +1,5 @@
 import numpy as np
 import socket
-from PIL import Image
-
 
 class Environment:
     def __init__(self, ip = "127.0.0.1", port = 13000, size = 128,):
@@ -23,20 +21,20 @@ class Environment:
         self._send(4, action)
         return self._receive()
 
-    def state2image(self, state):
-        return Image.fromarray(np.array(state, "uint8").reshape(self.size, self.size, 3))
-
-    def state2usableArray(self, state):
-        return np.array(state, "uint8").reshape(self.size, self.size, 3)
-
     def _receive(self):
-        # Kudos to Jan for the socket.MSG_WAITALL fix!
-        data   = self.client.recv(2 + 3 * self.size ** 2, socket.MSG_WAITALL)
+        data   = self.client.recv(2 + 13 * self.size ** 2, socket.MSG_WAITALL)
         end    = data[0]
         reward = data[1]
-        state  = [data[i] for i in range(2, len(data))]
-
+        state  = [data[i] for i in range(2, len(data))] # raw state
         return end, reward, state
+    
+    def state2arrays(self,state):
+        state  = np.array(state, "uint8").reshape(self.size, self.size, 13)
+        return {'colors' : state[...,:3],
+                'semseg' : state[...,3:6],
+                'normals': state[...,6:9],
+                'flow'   : state[...,9:12],
+                'depth'  : state[...,12]}
 
     def _send(self, action, command):
         self.client.send(bytes([action, command]))

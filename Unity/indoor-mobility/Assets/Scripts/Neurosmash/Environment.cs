@@ -88,17 +88,35 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 _state.ReadPixels(new Rect(0, 0, _width, _height), 0, 0);
                 _state.Apply();
                 var colors = _state.GetPixels32();
+
+                // TODO: CHANGE TO ACTUAL LABELS:
+                var semseg = colors;
+                var normals = colors;
+                var flow = colors;
+                var depth = colors;
+
                 for (var y = 0;
                     y < _height;
                     y++)
                     for (var x = 0;
                         x < _width;
                         x++) {
-                        var i = 3 * (x - y * _width + (_height - 1) * _width);
+                        var i = 13 * (x - y * _width + (_height - 1) * _width);
                         var j = 1 * (x + y * _width);
-                        _data[i + 2] = colors[j].r;
-                        _data[i + 3] = colors[j].g;
-                        _data[i + 4] = colors[j].b;
+                        _data[i + 2]  = colors[j].r;
+                        _data[i + 3]  = colors[j].g;
+                        _data[i + 4]  = colors[j].b;
+                        _data[i + 5]  = semseg[j].r;
+                        _data[i + 6]  = semseg[j].g;
+                        _data[i + 7]  = semseg[j].b;
+                        _data[i + 8]  = normals[j].r;
+                        _data[i + 9]  = normals[j].g;
+                        _data[i + 10] = normals[j].b;
+                        _data[i + 11] = flow[j].r;
+                        _data[i + 12] = flow[j].g;
+                        _data[i + 13] = flow[j].b;
+                        _data[i + 14] = depth[j].r;
+
                     }
 
                 return _data;
@@ -160,7 +178,7 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 _height = _targetTexture.height;
                 _width = _targetTexture.width;
             }
-            _data = new byte[2 + 3 * _width * _height];
+            _data = new byte[2 + 13 * _width * _height];
             _state = new Texture2D(_width, _height);
         }
 
