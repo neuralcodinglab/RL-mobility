@@ -4,6 +4,7 @@ using System.Net;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Environment = umu7.Neuromatics.Scripts.Neurosmash.Environment;
+using ImageSynthesis = umu7.Neuromatics.Scripts.Neurosmash.ImageSynthesis;
 
 namespace umu7.Neuromatics.Scripts.Utils
 {
@@ -74,8 +75,7 @@ namespace umu7.Neuromatics.Scripts.Utils
         {
             MovePlayer(data[1]);
             _command = (Command) data[0];
-            _environment.Input = data[1];            
-
+            _environment.Input = data[1];
         }
 
         private void OnDataSent()
@@ -253,7 +253,6 @@ namespace umu7.Neuromatics.Scripts.Utils
             // Load AppData
             ipAddress = appData.IpAddress;
             _port = appData.Port;
-            Debug.Log(appData.Port);
             forwardStepReward = appData.Forward;
             leftRightStepReward = appData.Side;
             boxBumpReward = appData.Box;

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+
 
 namespace umu7.Neuromatics.Scripts.Neurosmash {
     public class Environment : MonoBehaviour {
@@ -8,7 +10,7 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
         private byte[] _data;
         private byte _end, _reward;
         private int _height, _width;
-        private Texture2D _state;
+        private List<Color32[]> _state;
         private RenderTexture _targetTexture;
         private int playerAction;
         #pragma warning disable 0649 //disable warnings about serializefields not being assigned that occur in certain unity versions
@@ -72,6 +74,8 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
         
         private int[] testHallExperiment;
         private int indexTestHall;
+
+        
         #endregion;
 
         #region;
@@ -84,38 +88,59 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
             get {//the amount of bytes needed for the camera view is dependent on the size selected
                 _data[0] = _end;
                 _data[1] = _reward;
-                RenderTexture.active = _targetTexture;
-                _state.ReadPixels(new Rect(0, 0, _width, _height), 0, 0);
-                _state.Apply();
-                var colors = _state.GetPixels32();
 
-                // TODO: CHANGE TO ACTUAL LABELS:
-                var semseg = colors;
-                var normals = colors;
-                var flow = colors;
-                var depth = colors;
+                // Render the state
+                // (for the different render types: colors, semantic segmentation, depth, etc.)
+                var tex = new Texture2D(_width, _height);
+                _state= new List<Color32[]>();
+                for(var idx = 0; idx<=0; idx++)
+                {
+                    // Get hidden camera 
+                    var cam = ImageSynthesis.capturePasses[idx].camera;
 
+                    // Render
+                    RenderTexture.active = _targetTexture; //renderRT;
+                    cam.targetTexture = _targetTexture; // renderRT;
+                    cam.Render();
+                    tex.ReadPixels(new Rect(0, 0, _targetTexture.width, _targetTexture.height), 0, 0);
+                    tex.Apply();
+                    _state.Add(tex.GetPixels32());
+                }
+                Object.Destroy(tex);
+
+                // Color32 arrays for each of the render types:
+                var colors  = _state.ElementAt(0);
+                var objseg  = _state.ElementAt(1);
+                var semseg  = _state.ElementAt(2);
+                var depth   = _state.ElementAt(3);
+                var normals = _state.ElementAt(4);
+                var flow    = _state.ElementAt(5);
+                
+                // Write state to _data
                 for (var y = 0;
                     y < _height;
                     y++)
                     for (var x = 0;
                         x < _width;
                         x++) {
-                        var i = 13 * (x - y * _width + (_height - 1) * _width);
+                        var i = 16 * (x - y * _width + (_height - 1) * _width);
                         var j = 1 * (x + y * _width);
                         _data[i + 2]  = colors[j].r;
                         _data[i + 3]  = colors[j].g;
                         _data[i + 4]  = colors[j].b;
-                        _data[i + 5]  = semseg[j].r;
-                        _data[i + 6]  = semseg[j].g;
-                        _data[i + 7]  = semseg[j].b;
-                        _data[i + 8]  = normals[j].r;
-                        _data[i + 9]  = normals[j].g;
-                        _data[i + 10] = normals[j].b;
-                        _data[i + 11] = flow[j].r;
-                        _data[i + 12] = flow[j].g;
-                        _data[i + 13] = flow[j].b;
-                        _data[i + 14] = depth[j].r;
+                        _data[i + 5]  = objseg[j].r;
+                        _data[i + 6]  = objseg[j].g;
+                        _data[i + 7]  = objseg[j].b;
+                        _data[i + 8]  = semseg[j].r;
+                        _data[i + 9]  = semseg[j].g;
+                        _data[i + 10] = semseg[j].b;
+                        _data[i + 11] = normals[j].r;
+                        _data[i + 12] = normals[j].g;
+                        _data[i + 13] = normals[j].b;
+                        _data[i + 14] = flow[j].r;
+                        _data[i + 15] = flow[j].g;
+                        _data[i + 16] = flow[j].b;
+                        _data[i + 17] = depth[j].r;
 
                     }
 
@@ -155,7 +180,9 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 makeStartTestHallway();
             } else {
                 makeStartHallway();
-            }            
+            }
+            Camera.main.GetComponent<ImageSynthesis>().OnSceneChange();
+            //Camera.main.GetComponent<ImageSynthesis>().OnCameraChange();
         }
 
         private void Start() {
@@ -177,9 +204,10 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 _targetTexture = Camera.main.targetTexture;
                 _height = _targetTexture.height;
                 _width = _targetTexture.width;
+
+               
             }
-            _data = new byte[2 + 13 * _width * _height];
-            _state = new Texture2D(_width, _height);
+            _data = new byte[2 + 16 * _width * _height];          
         }
 
         public void setHallwayType(bool complex) {
