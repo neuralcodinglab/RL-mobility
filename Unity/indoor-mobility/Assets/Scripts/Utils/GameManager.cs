@@ -3,21 +3,26 @@ using System.Collections;
 using System.Net;
 using UnityEngine;
 using Random = UnityEngine.Random;
-using Environment = umu7.Neuromatics.Scripts.Neurosmash.Environment;
-using ImageSynthesis = umu7.Neuromatics.Scripts.Neurosmash.ImageSynthesis;
+using Environment = indoorMobility.Scripts.Hallway.Environment;
+using Player = indoorMobility.Scripts.Hallway.Player;
+//using ImgSynthesis = indoorMobility.Scripts.ImageSynthesis.ImgSynthesis;
 
-namespace umu7.Neuromatics.Scripts.Utils
+
+namespace indoorMobility.Scripts.Utils
 {
-    public class GameManager : MonoBehaviour 
+    public class GameManager : MonoBehaviour
     {
         #region;
 
         private Command _command;
         private Environment _environment;
         private Server _server;
+        private Player _player;
+
 #pragma warning disable 0649 //disable warnings about serializefields not being assigned that occur in certain unity versions
         [SerializeField] private AppData appData;
-        [SerializeField] private Environment environment;
+        [SerializeField] private GameObject environment;
+        //[SerializeField] private GameObject player;
         [SerializeField] private GameObject player;
         [SerializeField] private GameObject capsule1;
         [Header("Connection settings, need to be consistent with the settings in python:")]
@@ -41,7 +46,7 @@ namespace umu7.Neuromatics.Scripts.Utils
         [SerializeField] private byte leftRightStepReward;
         [SerializeField] private byte boxBumpReward;
         [SerializeField] private byte wallBumpReward;
-        #pragma warning restore 0649 //reanable the unassigned variable warnings 
+#pragma warning restore 0649 //reanable the unassigned variable warnings 
         public delegate void DataSentEventListener(byte[] data);
 
         public event DataSentEventListener DataSent;
@@ -57,7 +62,7 @@ namespace umu7.Neuromatics.Scripts.Utils
 
 
 
-         
+
 
 
 
@@ -73,15 +78,55 @@ namespace umu7.Neuromatics.Scripts.Utils
 
         private void OnDataReceived(byte[] data)
         {
-            MovePlayer(data[1]);
-            _command = (Command) data[0];
+            //MovePlayer(data[1]);
             _environment.Input = data[1];
+            _player.Input = data[1];
+            _command = (Command)data[0];
         }
 
         private void OnDataSent()
         {
             DataSent?.Invoke(_environment.Output);
         }
+
+
+
+        private IEnumerator Tick(float timescale)
+        {
+            _command = Command.None;
+            Time.timeScale = 0;
+            while (true)
+                switch (_command)
+                {   case Command.None:
+                        yield return null;
+                        continue;
+
+                    case Command.Reset:
+                        _environment.Reset();
+                        _player.Reset();
+                        Time.timeScale = timescale;
+                        yield return new WaitForFixedUpdate();
+                        Time.timeScale = 0;
+                        OnDataSent();
+                        _command = Command.None;
+                        break;
+
+                    case Command.Step:
+                        _player.Move();
+                        Time.timeScale = timescale;
+                        yield return new WaitForFixedUpdate();
+                        Time.timeScale = 0;
+                        OnDataSent();
+                        _command = Command.None;
+                        break;
+
+                    default: throw new ArgumentOutOfRangeException();
+                }
+        }
+
+        /*   
+
+         // OLD CODE (by Sam)
 
         private IEnumerator Tick(float timescale)
         {
@@ -213,71 +258,103 @@ namespace umu7.Neuromatics.Scripts.Utils
                 }
         }
 
+            //OLD CODE (BY SAM)
+        */
+
+      
+
+
+
+ 
+
         #endregion;
-        private void MovePlayer(int move) {
-            if(move == 0) { //forward
+
+        /*
+
+        private void MovePlayer(int move)
+        {
+            if (move == 0)
+            { //forward
                 _environment.setReward(forwardStepReward);//reward for stepping forward
                 Vector3 currentPos = player.transform.position;
                 player.transform.position = currentPos + new Vector3(0f, 0f, forwardSpeed);
                 stepsTaken++;
                 playerMovedForward = true;
-            } else if(move == 1) { //agent wants to move left
+            }
+            else if (move == 1)
+            { //agent wants to move left
                 Vector3 currentPos = player.transform.position;
-                if(currentPos.x == -sideStepDistance) { //if the agent is already at the left wall
+                if (currentPos.x == -sideStepDistance)
+                { //if the agent is already at the left wall
                     _environment.setReward(wallBumpReward); //negative reward for bumping into the wall
                     player.transform.position = currentPos + new Vector3(0f, 0f, 0f);
-                } else {
+                }
+                else
+                {
                     _environment.setReward(leftRightStepReward); //reward for moving to the left
                     player.transform.position = currentPos + new Vector3(-sideStepDistance, 0f, 0f);
                 }
-            } else if (move == 2) { //agent wants to move right
+            }
+            else if (move == 2)
+            { //agent wants to move right
                 Vector3 currentPos = player.transform.position;
-                if (currentPos.x == sideStepDistance) { //if the agent is already at the right wall
+                if (currentPos.x == sideStepDistance)
+                { //if the agent is already at the right wall
                     _environment.setReward(wallBumpReward); //negative reward for bumping into the wall
                     player.transform.position = currentPos + new Vector3(0f, 0f, 0f);
-                } else {
+                }
+                else
+                {
                     _environment.setReward(leftRightStepReward); //reward for moving to the right
                     player.transform.position = currentPos + new Vector3(sideStepDistance, 0f, 0f);
                 }
             }
         }
+
+    */
+
         #region;
 
+
         private void CameraJitter() { //Small camera rotations to help against overfitting
-            Camera.transform.rotation = Quaternion.Euler(Random.Range(-jitterAmount, jitterAmount), Random.Range(-jitterAmount, jitterAmount), Random.Range(-jitterAmount, jitterAmount));
-        }
-
-            protected void Awake() //Gets run when the game starts once
-        {
-
-            // Load AppData
-            ipAddress = appData.IpAddress;
-            _port = appData.Port;
-            forwardStepReward = appData.Forward;
-            leftRightStepReward = appData.Side;
-            boxBumpReward = appData.Box;
-            wallBumpReward = appData.Wall;
-            complexHallway = appData.Complex;
-
-
-
-            Camera = GetComponentInChildren<Camera>();
-            _ip = IPAddress.Parse(ipAddress);
-            stepsTaken = 0;
-            maxStepsTest = 560; // 14 * 10 * 4 different test hallways * pieces per test hallway * steps needed to pass one piece
-            playerMovedForward = false;
-            validation_run = false;
-            test_run = false;
-            _environment = Instantiate(environment);
-            _environment.setHallwayType(complexHallway);
-            _server = new Server(_ip, _port);
-            _server.DataRead += OnDataReceived;
-            DataSent += _server.OnDataSent;
-            _server.Start();
-            (Camera.targetTexture = new RenderTexture(_size, _size, 0)).Create();
-            StartCoroutine(Tick(_timescale));
-        }
-
-        #endregion;
-    }
+Camera.transform.rotation = Quaternion.Euler(Random.Range(-jitterAmount, jitterAmount), Random.Range(-jitterAmount, jitterAmount), Random.Range(-jitterAmount, jitterAmount));
 }
+
+protected void Awake() //Gets run when the game starts once
+{
+
+// Load AppData
+ipAddress = appData.IpAddress;
+_port = appData.Port;
+forwardStepReward = appData.Forward;
+leftRightStepReward = appData.Side;
+boxBumpReward = appData.Box;
+wallBumpReward = appData.Wall;
+complexHallway = appData.Complex;
+
+
+
+Camera = GetComponentInChildren<Camera>();
+_ip = IPAddress.Parse(ipAddress);
+stepsTaken = 0;
+maxStepsTest = 560; // 14 * 10 * 4 different test hallways * pieces per test hallway * steps needed to pass one piece
+playerMovedForward = false;
+validation_run = false;
+test_run = false;
+_environment = environment.GetComponent<Environment>(); //Instantiate(environment);
+_environment.setHallwayType(complexHallway);
+_server = new Server(_ip, _port);
+_player = player.GetComponent<Player>();
+_player.SetForwardSpeed = forwardSpeed;
+_server.DataRead += OnDataReceived;
+DataSent += _server.OnDataSent;
+_server.Start();
+(Camera.targetTexture = new RenderTexture(_size, _size, 0)).Create();
+StartCoroutine(Tick(_timescale));
+}
+
+#endregion;
+}
+}
+ 
+ 

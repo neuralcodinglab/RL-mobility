@@ -1,4 +1,4 @@
-namespace umu7.Neuromatics.Scripts.Utils
+namespace indoorMobility.Scripts.Utils
 {
     public enum Command //commands for the switch statement in the coroutine in GameManager 
     {

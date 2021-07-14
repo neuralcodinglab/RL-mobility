@@ -14,8 +14,9 @@ class Environment:
         except OSError as msg:
             self.client = None
 
-    def reset(self):
-        self._send(1, 0)
+    def reset(self, kind='tr_complex'):
+        action = {'tr_complex': 6, 'tr_simple': 7,'val_complex': 8, 'val_simple': 9}
+        self._send(1, action[kind])
         return self._receive()
 
     def step(self, action):

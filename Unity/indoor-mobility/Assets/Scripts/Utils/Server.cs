@@ -3,7 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 using System.Collections;
-namespace umu7.Neuromatics.Scripts.Utils
+
+namespace indoorMobility.Scripts.Utils
 {
     public class Server
     {

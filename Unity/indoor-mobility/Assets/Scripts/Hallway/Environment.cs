@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using ImgSynthesis = indoorMobility.Scripts.ImageSynthesis.ImgSynthesis;
 
-
-namespace umu7.Neuromatics.Scripts.Neurosmash {
+namespace indoorMobility.Scripts.Hallway
+{
     public class Environment : MonoBehaviour {
         #region;
 
@@ -12,7 +13,10 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
         private int _height, _width;
         private List<Color32[]> _state;
         private RenderTexture _targetTexture;
-        private int playerAction;
+        private ImgSynthesis _imgSynthesis;
+        private int _action;
+
+
         #pragma warning disable 0649 //disable warnings about serializefields not being assigned that occur in certain unity versions
         [SerializeField] private GameObject[] smallBoxPieces;
         [SerializeField] private GameObject[] bigBoxPieces;
@@ -81,7 +85,7 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
         #region;
 
         public byte Input {
-            set => playerAction = value;
+            set => _action = value;
         }
 
         public byte[] Output { //output to be send to python, consists of 1 byte to determine if the loop ended, 1 byte for the reward and x bytes with the camera view of the agent
@@ -93,10 +97,10 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 // (for the different render types: colors, semantic segmentation, depth, etc.)
                 var tex = new Texture2D(_width, _height);
                 _state= new List<Color32[]>();
-                for(var idx = 0; idx<=0; idx++)
+                for(var idx = 0; idx<=5; idx++)
                 {
                     // Get hidden camera 
-                    var cam = ImageSynthesis.capturePasses[idx].camera;
+                    var cam = ImgSynthesis.capturePasses[idx].camera;
 
                     // Render
                     RenderTexture.active = _targetTexture; //renderRT;
@@ -162,18 +166,11 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
             currentIndexEmpty = 0;
             currentZLights = -12f;
             currentLightsIndex = 0;
-            if (hallWayMade) {
-                for(int i = 0; i < nrOfEmptyPieces; i++) {
-                    Destroy(currentPiecesEmpty[i]);
-                }
-                for (int i = 0; i < nrOfCurrentPieces; i++) {
-                    Destroy(currentPieces[i]);
-                }
-                for (int i = 0; i < nrOfLights; i++) {
-                    Destroy(currentLights[i]);
-                }
-                hallWayMade = false;
-            }
+
+
+
+            if (hallWayMade)
+                destroyHallway();
             if (testing) {
                 makeTestHallwayArray();
                 indexTestHall = 0;
@@ -181,8 +178,8 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
             } else {
                 makeStartHallway();
             }
-            Camera.main.GetComponent<ImageSynthesis>().OnSceneChange();
-            //Camera.main.GetComponent<ImageSynthesis>().OnCameraChange();
+           _imgSynthesis.OnSceneChange();
+
         }
 
         private void Start() {
@@ -204,10 +201,12 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                 _targetTexture = Camera.main.targetTexture;
                 _height = _targetTexture.height;
                 _width = _targetTexture.width;
+                _imgSynthesis = Camera.main.GetComponent<ImgSynthesis>();
 
-               
+
             }
-            _data = new byte[2 + 16 * _width * _height];          
+            _data = new byte[2 + 16 * _width * _height];      
+            
         }
 
         public void setHallwayType(bool complex) {
@@ -224,6 +223,17 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
             _end = endChange;
         }
         #endregion;
+
+        public void destroyHallway()
+        {
+            for(int i = 0; i < nrOfEmptyPieces; i++)
+                Destroy(currentPiecesEmpty[i]);
+            for (int i = 0; i < nrOfCurrentPieces; i++) 
+                Destroy(currentPieces[i]);
+            for (int i = 0; i < nrOfLights; i++)
+                Destroy(currentLights[i]);
+            hallWayMade = false;
+        }
 
         public void makeStartHallway() { //make the beginning hallway consisting of nrOfPieces amount of hallwaypieces
             hallWayMade = true;
@@ -384,10 +394,11 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
         public void makeStartTestHallway() { //Initiate the first nrAmountOfPieces for the test hallway
             hallWayMade = true;
             if (complexHall) {
-                for (int i = 0; i < nrOfEmptyPieces; i++) {
+                for (int i = 0; i < nrOfEmptyPieces; i++)
                     currentPiecesEmpty[i] = Instantiate(emptyHallWaysComplex[0], new Vector3(0, 0, currentZ - 1 - (i * 2)), Quaternion.Euler(0, 0, 0));
-                }
-                for (int i = 0; i < nrOfCurrentPieces; i++) {
+
+                for (int i = 0; i < nrOfCurrentPieces; i++) 
+                {
                     if (testHallExperiment[indexTestHall] > 2) {
                         currentPieces[i] = Instantiate(bigBoxPiecesComplex[testHallExperiment[indexTestHall]-3], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
                     } else {
@@ -396,6 +407,7 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
                     currentZ += 2;
                     indexTestHall += 1;
                 }
+
             } else {
                 for (int i = 0; i < nrOfEmptyPieces; i++) {
                     currentPiecesEmpty[i] = Instantiate(emptyHallWays[0], new Vector3(0, 0, currentZ - 1 - (i * 2)), Quaternion.Euler(0, 0, 0));

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-namespace umu7.Neuromatics.Scripts.Utils
+namespace indoorMobility.Scripts.Utils
 {
 
 

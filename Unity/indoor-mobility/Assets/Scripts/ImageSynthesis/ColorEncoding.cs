@@ -1,5 +1,10 @@
 ﻿using UnityEngine;
 
+
+namespace indoorMobility.Scripts.ImageSynthesis
+{
+
+
 public class ColorEncoding
 {
 	public static byte ReverseBits(byte value)
@@ -76,4 +81,5 @@ public class ColorEncoding
 
 		return color;
 	}
+}
 }

@@ -4,7 +4,8 @@ using System.Collections;
 using System.IO;
 
 
-namespace umu7.Neuromatics.Scripts.Neurosmash { 
+namespace indoorMobility.Scripts.ImageSynthesis
+{ 
 
 	// @TODO:
 	// . support custom color wheels in optical flow via lookup textures
@@ -19,7 +20,7 @@ namespace umu7.Neuromatics.Scripts.Neurosmash {
 	//      2) rendering several cameras with different aspect ratios - vectors do stretch to the sides of the screen
 
 	[RequireComponent (typeof(Camera))]
-	public class ImageSynthesis : MonoBehaviour {
+	public class ImgSynthesis : MonoBehaviour {
 
 		// pass configuration
 		public static CapturePass[] capturePasses = new CapturePass[] { //JR: was non-static 

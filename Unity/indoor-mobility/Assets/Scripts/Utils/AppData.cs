@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace umu7.Neuromatics.Scripts.Utils
+namespace indoorMobility.Scripts.Utils
 {
     [CreateAssetMenu(menuName = "Neuromatics/AppData")]
     public class AppData : ScriptableObject
