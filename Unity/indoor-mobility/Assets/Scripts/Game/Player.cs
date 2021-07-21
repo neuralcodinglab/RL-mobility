@@ -34,9 +34,10 @@ namespace indoorMobility.Scripts.Game
 
         public void Move(int action)
         {
+            environment.End = 0;
             _collidedWith = "";
             Vector3 currentPos = transform.position;
-
+            
             switch (action)
             {
                 case 0: // forward
@@ -46,14 +47,20 @@ namespace indoorMobility.Scripts.Game
                         _forwardStepCount++;
 
                         if (_forwardStepCount >= appData.MaxSteps) // TODO Is this necessary? Or do it in Python?
-                            environment.End = 2;
+                        {
+                            environment.Reward = appData.TargetReachedReward;
+                            environment.End = 3;
+                        }
                         break;
                     }
 
                 case 1: // agent wants to go left
                     {
                         if (currentPos.x == -appData.SideStepDistance)
+                        {
                             environment.Reward = appData.WallBumpReward;
+                            environment.End = 2;
+                        }
                         else
                         {
                             environment.Reward = appData.SideStepReward;
@@ -65,7 +72,10 @@ namespace indoorMobility.Scripts.Game
                 case 2: // agent wants to go right
                     {
                         if (currentPos.x == appData.SideStepDistance)
+                        {
                             environment.Reward = appData.WallBumpReward;
+                            environment.End = 2;
+                        }
                         else
                         {
                             environment.Reward = appData.SideStepReward;

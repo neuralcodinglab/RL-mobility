@@ -55,6 +55,7 @@ namespace indoorMobility.Scripts.Utils
         [SerializeField] private byte _sideStepReward;
         [SerializeField] private byte _boxBumpReward;
         [SerializeField] private byte _wallBumpReward;
+        [SerializeField] private byte _targetReachedReward;
 
         public byte ForwardStepReward
         {
@@ -75,6 +76,11 @@ namespace indoorMobility.Scripts.Utils
         {
             get => _wallBumpReward;
             set => _wallBumpReward = value;
+        }
+        public byte TargetReachedReward
+        {
+            get => _targetReachedReward;
+            set => _targetReachedReward = value;
         }
         #endregion
 
@@ -136,10 +142,11 @@ namespace indoorMobility.Scripts.Utils
             _port =  13000;
 
             // Rewards
-            _forwardStepReward = (byte) 10;
-            _sideStepReward = (byte) 101;
-            _boxBumpReward = (byte) 120;
-            _wallBumpReward = (byte) 110;
+            _forwardStepReward = (byte)10;
+            _sideStepReward = (byte)101;
+            _boxBumpReward = (byte)120;
+            _wallBumpReward = (byte)110;
+            _targetReachedReward = (byte)80;
 
             // Random seed (for different hallway variations, random camera rotations)
             _randomSeed = 0;

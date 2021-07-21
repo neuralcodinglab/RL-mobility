@@ -20,6 +20,10 @@ class Environment:
         return self._receive()
 
     def step(self, action):
+        self._send(2, action)
+        return self._receive()
+    
+    def setRandomSeed(self, action):
         self._send(3, action)
         return self._receive()
 

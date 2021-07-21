@@ -122,7 +122,7 @@ namespace indoorMobility.Scripts.Game
             player.Move(_action);
 
             // update hallway if necessary
-            if (hallway.EndPosition - player.transform.position.z <= 2*appData.VisibleHallwayPieces - 4)
+            if (hallway.EndPosition - player.transform.position.z <= 2*appData.VisibleHallwayPieces -6)
                 hallway.updateHallway();
         }
 
