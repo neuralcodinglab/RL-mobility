@@ -2,73 +2,158 @@ using UnityEngine;
 
 namespace indoorMobility.Scripts.Utils
 {
-    [CreateAssetMenu(menuName = "Neuromatics/AppData")]
+    [CreateAssetMenu(menuName = "IndoorMobility/AppData")]
     public class AppData : ScriptableObject
     {
 
+        #region
+        // Game data
+        [SerializeField] private float _timescale;
+        [SerializeField] private int _width;
+        [SerializeField] private int _heigth;
+        public float TimeScale
+        {
+            get => _timescale;
+            set => _timescale = value;
+        }
+
+        public int Width
+        {
+            get => _width;
+            set => _width = value;
+        }
+        public int Height
+        {
+            get => _heigth;
+            set => _heigth = value;
+        }
+
+
+        #endregion
+
+
+        #region
+        // Server data 
         [SerializeField] private string _ipAddress;
         [SerializeField] private int _port;
-        [SerializeField] private byte _fwd;
-        [SerializeField] private byte _side;
-        [SerializeField] private byte _box;
-        [SerializeField] private byte _wall;
-        [SerializeField] private bool _complex;
-
-
         public string IpAddress
         {
             get => _ipAddress;
             set => _ipAddress = value;
         }
-
-
         public int Port
         {
             get => _port;
             set => _port = value;
         }
+        #endregion
 
-        public byte Forward
+
+        #region
+        // Rewards
+        [SerializeField] private byte _forwardStepReward;
+        [SerializeField] private byte _sideStepReward;
+        [SerializeField] private byte _boxBumpReward;
+        [SerializeField] private byte _wallBumpReward;
+
+        public byte ForwardStepReward
         {
-            get => _fwd;
-            set => _fwd = value;
+            get => _forwardStepReward;
+            set => _forwardStepReward = value;
+        }
+        public byte SideStepReward
+        {
+            get => _sideStepReward;
+            set => _sideStepReward = value;
+        }
+        public byte BoxBumpReward
+        {
+            get => _boxBumpReward;
+            set => _boxBumpReward = value;
+        }
+        public byte WallBumpReward
+        {
+            get => _wallBumpReward;
+            set => _wallBumpReward = value;
+        }
+        #endregion
+
+        #region
+
+
+
+        // Environment data
+        [SerializeField] private int _randomSeed;
+        [SerializeField] private bool _complexHallway;
+        [SerializeField] private float _forwardSpeed;
+        [SerializeField] private float _sideStepDistance;
+        [SerializeField] private int _maxSteps;
+        [SerializeField] private float _camRotJitter;
+
+        public int RandomSeed
+        {
+            get => _randomSeed;
+            set => _randomSeed = value;
+        }
+        public bool ComplexHallway
+        {
+            get => _complexHallway;
+            set => _complexHallway = value;
+        }
+        public float ForwardSpeed
+        {
+            get => _forwardSpeed;
+            set => _forwardSpeed = value;
+        }
+        public float SideStepDistance
+        {
+            get => _sideStepDistance;
+            set => _sideStepDistance = value;
+        }
+        public int MaxSteps
+        {
+            get => _maxSteps;
+            set => _maxSteps = value;
+        }
+        public float CamRotJitter
+        {
+            get => _camRotJitter;
+            set => _camRotJitter = value;
         }
 
-        public byte Side
-        {
-            get => _side;
-            set => _side = value;
-        }
+        #endregion
 
-        public byte Box
-        {
-            get => _box;
-            set => _box = value;
-        }
 
-        public byte Wall
-        {
-            get => _wall;
-            set => _wall = value;
-        }
-
-        public bool Complex
-        {
-            get => _complex;
-            set => _complex = value;
-        }
 
         private void Reset()
         {
+            // Game Manager
+            _timescale = 1;
+            _width = 128;
+            _heigth = 128;
 
+            // Server
             _ipAddress = "127.0.0.1";
             _port =  13000;
-            _fwd = (byte) 10;
-            _side = (byte) 101;
-            _box = (byte) 120;
-            _wall = (byte) 110;
-            _complex = true;
 
+            // Rewards
+            _forwardStepReward = (byte) 10;
+            _sideStepReward = (byte) 101;
+            _boxBumpReward = (byte) 120;
+            _wallBumpReward = (byte) 110;
+
+            // Random seed (for different hallway variations, random camera rotations)
+            _randomSeed = 0;
+
+            // Hallway data
+            _complexHallway = true;
+
+
+            // Player data
+            _forwardSpeed = 0.5f;
+            _sideStepDistance = 0.95f;
+            _maxSteps = 100;
+            _camRotJitter = 3.0f;
         }
     }
 }

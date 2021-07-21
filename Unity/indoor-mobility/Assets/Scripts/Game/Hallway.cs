@@ -2,19 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using ImgSynthesis = indoorMobility.Scripts.ImageSynthesis.ImgSynthesis;
+using indoorMobility.Scripts.Utils;
 
-namespace indoorMobility.Scripts.Hallway
+namespace indoorMobility.Scripts.Game
 {
-    public class Environment : MonoBehaviour {
+    public class Hallway : MonoBehaviour {
         #region;
 
-        private byte[] _data;
-        private byte _end, _reward;
-        private int _height, _width;
-        private List<Color32[]> _state;
-        private RenderTexture _targetTexture;
-        private ImgSynthesis _imgSynthesis;
-        private int _action;
+        private AppData appData;
+   
 
 
         #pragma warning disable 0649 //disable warnings about serializefields not being assigned that occur in certain unity versions
@@ -79,110 +75,66 @@ namespace indoorMobility.Scripts.Hallway
         private int[] testHallExperiment;
         private int indexTestHall;
 
+
+        public float EndPosition
+        {
+            get => currentZ;
+        }
         
         #endregion;
 
-        #region;
-
-        public byte Input {
-            set => _action = value;
-        }
-
-        public byte[] Output { //output to be send to python, consists of 1 byte to determine if the loop ended, 1 byte for the reward and x bytes with the camera view of the agent
-            get {//the amount of bytes needed for the camera view is dependent on the size selected
-                _data[0] = _end;
-                _data[1] = _reward;
-
-                // Render the state
-                // (for the different render types: colors, semantic segmentation, depth, etc.)
-                var tex = new Texture2D(_width, _height);
-                _state= new List<Color32[]>();
-                for(var idx = 0; idx<=5; idx++)
-                {
-                    // Get hidden camera 
-                    var cam = ImgSynthesis.capturePasses[idx].camera;
-
-                    // Render
-                    RenderTexture.active = _targetTexture; //renderRT;
-                    cam.targetTexture = _targetTexture; // renderRT;
-                    cam.Render();
-                    tex.ReadPixels(new Rect(0, 0, _targetTexture.width, _targetTexture.height), 0, 0);
-                    tex.Apply();
-                    _state.Add(tex.GetPixels32());
-                }
-                Object.Destroy(tex);
-
-                // Color32 arrays for each of the render types:
-                var colors  = _state.ElementAt(0);
-                var objseg  = _state.ElementAt(1);
-                var semseg  = _state.ElementAt(2);
-                var depth   = _state.ElementAt(3);
-                var normals = _state.ElementAt(4);
-                var flow    = _state.ElementAt(5);
-                
-                // Write state to _data
-                for (var y = 0;
-                    y < _height;
-                    y++)
-                    for (var x = 0;
-                        x < _width;
-                        x++) {
-                        var i = 16 * (x - y * _width + (_height - 1) * _width);
-                        var j = 1 * (x + y * _width);
-                        _data[i + 2]  = colors[j].r;
-                        _data[i + 3]  = colors[j].g;
-                        _data[i + 4]  = colors[j].b;
-                        _data[i + 5]  = objseg[j].r;
-                        _data[i + 6]  = objseg[j].g;
-                        _data[i + 7]  = objseg[j].b;
-                        _data[i + 8]  = semseg[j].r;
-                        _data[i + 9]  = semseg[j].g;
-                        _data[i + 10] = semseg[j].b;
-                        _data[i + 11] = normals[j].r;
-                        _data[i + 12] = normals[j].g;
-                        _data[i + 13] = normals[j].b;
-                        _data[i + 14] = flow[j].r;
-                        _data[i + 15] = flow[j].g;
-                        _data[i + 16] = flow[j].b;
-                        _data[i + 17] = depth[j].r;
-
-                    }
-
-                return _data;
-            }
-        }
-
-        #endregion;
 
         #region;
 
-        public void Reset() { //reset all values, delete all hallwaypieces and rebuild a new starting hallway
+        public void Reset(int action)
+        { //reset all values, delete all hallwaypieces and rebuild a new starting hallway
             updateLightsNow = false;
-            _reward = 0;
-            _end = 0;
             currentZ = 0;
             currentZEmpty = 0;
             currentIndex = 0;
             currentIndexEmpty = 0;
             currentZLights = -12f;
             currentLightsIndex = 0;
-
-
-
             if (hallWayMade)
                 destroyHallway();
-            if (testing) {
-                makeTestHallwayArray();
-                indexTestHall = 0;
-                makeStartTestHallway();
-            } else {
-                makeStartHallway();
-            }
-           _imgSynthesis.OnSceneChange();
 
+            switch (action)
+            {
+                case 0:
+                    testing = false;
+                    complexHall = false;
+                    makeStartHallway();
+                    break;
+                case 1:
+                    testing = false;
+                    complexHall = true;
+                    makeStartHallway();
+                    break;
+                case 2:
+                    testing = true;
+                    complexHall = false;
+                    makeTestHallwayArray();
+                    indexTestHall = 0;
+                    makeStartTestHallway();
+                    break;
+                case 3:
+                    testing = true;
+                    complexHall = true;
+                    makeTestHallwayArray();
+                    indexTestHall = 0;
+                    makeStartTestHallway();
+                    break;
+                default:
+                    break;
+            }
+            foreach (GameObject HallwayPiece in currentPieces)
+            {
+                HallwayPiece.GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+            }
         }
 
         private void Start() {
+            appData = GameObject.Find("GameManager").GetComponent<GameManager>().appData;
             testing = false;
             currentZ = 0;
             currentZEmpty = 0;
@@ -196,17 +148,7 @@ namespace indoorMobility.Scripts.Hallway
             currentPieces = new GameObject[nrOfCurrentPieces];
             currentPiecesEmpty = new GameObject[nrOfEmptyPieces];
             currentLights = new GameObject[nrOfLights];
-            indexTestHall = 0;
-            if (Camera.main != null) {
-                _targetTexture = Camera.main.targetTexture;
-                _height = _targetTexture.height;
-                _width = _targetTexture.width;
-                _imgSynthesis = Camera.main.GetComponent<ImgSynthesis>();
-
-
-            }
-            _data = new byte[2 + 16 * _width * _height];      
-            
+            indexTestHall = 0; 
         }
 
         public void setHallwayType(bool complex) {
@@ -216,12 +158,6 @@ namespace indoorMobility.Scripts.Hallway
             testing = test;
         }
 
-        public void setReward(byte rewardChange) {
-            _reward = rewardChange;
-        }
-        public void setEnd(byte endChange) {
-            _end = endChange;
-        }
         #endregion;
 
         public void destroyHallway()
@@ -333,6 +269,11 @@ namespace indoorMobility.Scripts.Hallway
                 updateLightsNow = true;
             }
             
+            foreach (GameObject HallwayPiece in currentPieces)
+            {
+                HallwayPiece.GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+            }
+
         }
         public void updateLights() { //function to add a new light in front and remove one in the back
             float randomZVariation = Random.Range(-1f, 1f); //add random amount of variation to the z position
@@ -461,5 +402,11 @@ namespace indoorMobility.Scripts.Hallway
                 updateLightsNow = true;
             }
         }
+
+        public void FixedUpdate()
+        {
+            Debug.Log(currentZ);
+        }
+
     }
 }

@@ -10,12 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f89a7502eb74f34a86484e02bc64bbe, type: 3}
-  m_Name: myAppdata
+  m_Name: DefaultAppData
   m_EditorClassIdentifier: 
+  _timescale: 1
+  _width: 128
+  _heigth: 128
   _ipAddress: 127.0.0.1
   _port: 13000
-  _fwd: 10
-  _side: 101
-  _box: 120
-  _wall: 110
-  _complex: 1
+  _forwardStepReward: 10
+  _sideStepReward: 101
+  _boxBumpReward: 120
+  _wallBumpReward: 110
+  _randomSeed: 0
+  _complexHallway: 1
+  _forwardSpeed: 0.5
+  _sideStepDistance: 0.95
+  _maxSteps: 100
+  _camRotJitter: 3

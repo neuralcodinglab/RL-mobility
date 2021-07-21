@@ -36,28 +36,28 @@ namespace indoorMobility.Scripts.Utils
 
         public void ChangeForward()
         {
-            appData.Forward = (byte) int.Parse(fwdField.text);
+            appData.ForwardStepReward = (byte) int.Parse(fwdField.text);
         }
 
         public void ChangeSide()
         {
-            appData.Side = (byte) int.Parse(sideField.text);
+            appData.SideStepReward = (byte) int.Parse(sideField.text);
         }
 
         public void ChangeBox()
         {
             Debug.Log(boxField.text);
-            appData.Box = (byte) int.Parse(boxField.text);
+            appData.BoxBumpReward = (byte) int.Parse(boxField.text);
         }
 
         public void ChangeWall()
         {
-            appData.Wall = (byte) int.Parse(wallField.text);
+            appData.WallBumpReward = (byte) int.Parse(wallField.text);
         }
 
         public void ChangeComplexity()
         {
-            appData.Complex = complexToggle.isOn;
+            appData.ComplexHallway = complexToggle.isOn;
         }
 
         public void StartServer()

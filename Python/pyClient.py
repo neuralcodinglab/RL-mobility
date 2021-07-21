@@ -14,13 +14,13 @@ class Environment:
         except OSError as msg:
             self.client = None
 
-    def reset(self, kind='tr_complex'):
-        action = {'tr_complex': 6, 'tr_simple': 7,'val_complex': 8, 'val_simple': 9}
-        self._send(1, action[kind])
+    def reset(self, kind=0):
+        """" {'tr_complex': 0, 'tr_simple': 1,'test_complex': 2, 'test_simple': 3}"""
+        self._send(1, kind)
         return self._receive()
 
     def step(self, action):
-        self._send(4, action)
+        self._send(3, action)
         return self._receive()
 
     def _receive(self):
