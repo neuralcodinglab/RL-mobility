@@ -103,6 +103,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: big_box
       objectReference: {fileID: 0}
+    - target: {fileID: 3555944090933097589, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3555944090933097590, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -182,6 +187,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: big_box (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3555944090933097589, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3555944090933097590, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
         type: 3}
@@ -268,6 +278,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Wall
       objectReference: {fileID: 0}
+    - target: {fileID: 8533359569433634782, guid: 28840207dbd170047b9d75ed7b9b0b78,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28840207dbd170047b9d75ed7b9b0b78, type: 3}
 --- !u!4 &7824849358904714785 stripped
@@ -287,6 +302,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Ceiling
+      objectReference: {fileID: 0}
+    - target: {fileID: 2226769195892156740, guid: 337f454045fa253448f208c6c877dd98,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7138550478261907670, guid: 337f454045fa253448f208c6c877dd98,
         type: 3}
@@ -362,6 +382,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Floor
+      objectReference: {fileID: 0}
+    - target: {fileID: 96938413107647033, guid: 6fad1a7d028f32040913d006f6f407bb,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4382304422468577043, guid: 6fad1a7d028f32040913d006f6f407bb,
         type: 3}
@@ -502,6 +527,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Wall
+      objectReference: {fileID: 0}
+    - target: {fileID: 8533359569433634782, guid: 28840207dbd170047b9d75ed7b9b0b78,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28840207dbd170047b9d75ed7b9b0b78, type: 3}

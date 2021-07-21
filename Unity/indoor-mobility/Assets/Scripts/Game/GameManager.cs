@@ -13,7 +13,6 @@ namespace indoorMobility.Scripts.Game
     public class GameManager : MonoBehaviour
     {
         #region;
-        private Camera _camera;
         private Command _command;
         private Server _server;
 
@@ -105,7 +104,7 @@ namespace indoorMobility.Scripts.Game
                         break;
 
                     case Command.SetSeed:
-                        environment.ChangeSeed();
+                        environment.SetManualSeed();
                         Debug.Log("Random seed was changed");
                         Time.timeScale = timescale;
                         yield return new WaitForFixedUpdate();
@@ -131,10 +130,6 @@ namespace indoorMobility.Scripts.Game
         {   // Instantiate environment
             appData.RandomSeed = (int)System.DateTime.Now.Ticks;
             environment = Environment.GetComponent<Environment>(); //Instantiate(environment);
-
-            // Initialize camera
-            _camera = Camera.main;
-            (_camera.targetTexture = new RenderTexture(appData.Width, appData.Height, 0)).Create();
 
             // Start server
             _server = new Server(IPAddress.Parse(appData.IpAddress), appData.Port);

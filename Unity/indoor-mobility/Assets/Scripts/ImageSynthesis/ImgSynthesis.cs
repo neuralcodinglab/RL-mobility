@@ -127,7 +127,6 @@ namespace indoorMobility.Scripts.ImageSynthesis
 
 		public void OnCameraChange()
 		{
-			Debug.Log("Camera Changed");
 			int targetDisplay = 1;
 			var mainCamera = GetComponent<Camera>();
 			foreach (var pass in capturePasses)
@@ -147,9 +146,7 @@ namespace indoorMobility.Scripts.ImageSynthesis
 
 			// cache materials and setup material properties
 			if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader)
-			{ opticalFlowMaterial = new Material(opticalFlowShader);
-				Debug.Log("new optical flow material");
-			}
+				opticalFlowMaterial = new Material(opticalFlowShader);
 			opticalFlowMaterial.SetFloat("_Sensitivity", opticalFlowSensitivity);
 
 			// setup command buffers and replacement shaders

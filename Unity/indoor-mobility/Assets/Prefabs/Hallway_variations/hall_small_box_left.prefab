@@ -102,6 +102,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: small_box
       objectReference: {fileID: 0}
+    - target: {fileID: 2842562582184228665, guid: 40642ee042a75a1488f557b0af248f42,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 40642ee042a75a1488f557b0af248f42, type: 3}
 --- !u!4 &4205170409202928274 stripped

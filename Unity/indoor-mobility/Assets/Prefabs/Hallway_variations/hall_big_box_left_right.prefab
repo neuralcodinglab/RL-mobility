@@ -273,6 +273,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: big_box
       objectReference: {fileID: 0}
+    - target: {fileID: 3555944090933097589, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4c97e8eb0a40155458bcb5c2519c6ff0, type: 3}
 --- !u!4 &8642177647825463475 stripped
@@ -517,6 +522,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: big_box (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3555944090933097589, guid: 4c97e8eb0a40155458bcb5c2519c6ff0,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4c97e8eb0a40155458bcb5c2519c6ff0, type: 3}

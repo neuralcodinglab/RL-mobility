@@ -142,6 +142,7 @@ namespace indoorMobility.Scripts.Game
             currentIndex = 0;
             currentIndexEmpty = 0;
             nrOfEmptyPieces = 2;
+            nrOfCurrentPieces = appData.VisibleHallwayPieces;
             currentZLights = -12f; //offset starting light behind the agent so the beginning is not to dark in comparison to the rest
             currentLightsIndex = 0;
             nrOfLights = (int)(nrOfCurrentPieces/2) +4; // On average 1 light every 2 pieces with 4 lights as buffer behind him
@@ -234,46 +235,60 @@ namespace indoorMobility.Scripts.Game
         }
 
         public void updateHallway() { //function to update the hallway by removing the piece in the back and spawning in a piece in front
-            addEmpty();
-            Destroy(currentPieces[currentIndex]);
-            if (complexHall) {                
-                if (currentZ % 8 == 0) {
-                    int randomPieceIndex = Random.Range(0, 12);
-                    currentPieces[currentIndex] = Instantiate(bigBoxPiecesComplex[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
-                    currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
-                } else {
-                    int randomPieceIndex = Random.Range(0, 3);
-                    currentPieces[currentIndex] = Instantiate(smallBoxPiecesComplex[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
-                    currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
-                }
-            } else {
-                int randomPieceIndex = Random.Range(0, 3);
-                if (currentZ % 8 == 0) {
-                    currentPieces[currentIndex] = Instantiate(bigBoxPieces[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
-                    currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
-                } else {
-                    currentPieces[currentIndex] = Instantiate(smallBoxPieces[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
-                    currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
-                }
-            }
-            currentZ +=2;
-            if (currentIndex < nrOfCurrentPieces -1) {
-                currentIndex++;
-            } else {
-                currentIndex = 0;
-            }
-            if (updateLightsNow) {
-                updateLights();
-                updateLightsNow = false;
-            } else {
-                updateLightsNow = true;
-            }
-            
-            foreach (GameObject HallwayPiece in currentPieces)
+            if (testing)
+                updateTestHallway();
+            else
             {
-                HallwayPiece.GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+                addEmpty();
+                Destroy(currentPieces[currentIndex]);
+                if (complexHall)
+                {
+                    if (currentZ % 8 == 0)
+                    {
+                        int randomPieceIndex = Random.Range(0, 12);
+                        currentPieces[currentIndex] = Instantiate(bigBoxPiecesComplex[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
+                        currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+                    }
+                    else
+                    {
+                        int randomPieceIndex = Random.Range(0, 3);
+                        currentPieces[currentIndex] = Instantiate(smallBoxPiecesComplex[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
+                        currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+                    }
+                }
+                else
+                {
+                    int randomPieceIndex = Random.Range(0, 3);
+                    if (currentZ % 8 == 0)
+                    {
+                        currentPieces[currentIndex] = Instantiate(bigBoxPieces[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
+                        currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+                    }
+                    else
+                    {
+                        currentPieces[currentIndex] = Instantiate(smallBoxPieces[randomPieceIndex], new Vector3(0, 0, currentZ + 5), Quaternion.Euler(0, 0, 0));
+                        currentPieces[currentIndex].GetComponentInChildren<MeshFilter>().mesh.RecalculateNormals();
+                    }
+                }
+                currentZ += 2;
+                if (currentIndex < nrOfCurrentPieces - 1)
+                {
+                    currentIndex++;
+                }
+                else
+                {
+                    currentIndex = 0;
+                }
+                if (updateLightsNow)
+                {
+                    updateLights();
+                    updateLightsNow = false;
+                }
+                else
+                {
+                    updateLightsNow = true;
+                }
             }
-
         }
         public void updateLights() { //function to add a new light in front and remove one in the back
             float randomZVariation = Random.Range(-1f, 1f); //add random amount of variation to the z position
@@ -403,10 +418,6 @@ namespace indoorMobility.Scripts.Game
             }
         }
 
-        public void FixedUpdate()
-        {
-            Debug.Log(currentZ);
-        }
 
     }
 }

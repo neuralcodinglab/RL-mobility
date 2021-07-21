@@ -10,7 +10,7 @@ namespace indoorMobility.Scripts.Utils
         // Game data
         [SerializeField] private float _timescale;
         [SerializeField] private int _width;
-        [SerializeField] private int _heigth;
+        [SerializeField] private int _height;
         public float TimeScale
         {
             get => _timescale;
@@ -24,8 +24,8 @@ namespace indoorMobility.Scripts.Utils
         }
         public int Height
         {
-            get => _heigth;
-            set => _heigth = value;
+            get => _height;
+            set => _height = value;
         }
 
 
@@ -84,21 +84,16 @@ namespace indoorMobility.Scripts.Utils
 
         // Environment data
         [SerializeField] private int _randomSeed;
-        [SerializeField] private bool _complexHallway;
         [SerializeField] private float _forwardSpeed;
         [SerializeField] private float _sideStepDistance;
         [SerializeField] private int _maxSteps;
         [SerializeField] private float _camRotJitter;
+        [SerializeField] private int _visibleHallwayPieces;
 
         public int RandomSeed
         {
             get => _randomSeed;
             set => _randomSeed = value;
-        }
-        public bool ComplexHallway
-        {
-            get => _complexHallway;
-            set => _complexHallway = value;
         }
         public float ForwardSpeed
         {
@@ -120,7 +115,11 @@ namespace indoorMobility.Scripts.Utils
             get => _camRotJitter;
             set => _camRotJitter = value;
         }
-
+        public int VisibleHallwayPieces
+        {
+            get => _visibleHallwayPieces;
+            set => _visibleHallwayPieces = value;
+        }
         #endregion
 
 
@@ -130,7 +129,7 @@ namespace indoorMobility.Scripts.Utils
             // Game Manager
             _timescale = 1;
             _width = 128;
-            _heigth = 128;
+            _height = 128;
 
             // Server
             _ipAddress = "127.0.0.1";
@@ -146,8 +145,7 @@ namespace indoorMobility.Scripts.Utils
             _randomSeed = 0;
 
             // Hallway data
-            _complexHallway = true;
-
+            _visibleHallwayPieces = 20;
 
             // Player data
             _forwardSpeed = 0.5f;

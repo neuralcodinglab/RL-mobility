@@ -8,27 +8,25 @@ namespace indoorMobility.Scripts.Game
 {
     public class Environment : MonoBehaviour {
         #region;
+
+        // Input/Output variables and appData (game settings)
         private AppData appData;
         private int _action;
         private byte[] _data;
         private byte _end, _reward;
-        private int _height, _width;
+
+        // Image processing variables
+        private Camera _camera;
+      //  private int _height, _width;
         private List<Color32[]> _state;
         private RenderTexture _targetTexture;
- 
+        private ImgSynthesis imgSynthesis; // Img processing script attached to the camera
 
         // Children environment GameObjects and corresponding scripts
         [SerializeField] private GameObject Hallway;
         [SerializeField] private GameObject Player;
         private Player player;
         private Hallway hallway;
-
-        // Image processing script (attached to camera)
-        private ImgSynthesis imgSynthesis;
-
-        // TODO MOVE THIS TO HALLWAY
-        private bool complexHall;
-        private bool testing;
 
         // Can be accessed by player script or game manager
         public byte Reward { set => _reward = value;}
@@ -47,8 +45,8 @@ namespace indoorMobility.Scripts.Game
 
                 // Render the state
                 // (for the different render types: colors, semantic segmentation, depth, etc.)
-                var tex = new Texture2D(_width, _height);
-                _state= new List<Color32[]>();
+                var tex = new Texture2D(appData.Width, appData.Height);
+                _state = new List<Color32[]>();
                 for(var idx = 0; idx<=5; idx++)
                 {
                     // Get hidden camera 
@@ -74,13 +72,13 @@ namespace indoorMobility.Scripts.Game
                 
                 // Write state to _data
                 for (var y = 0;
-                    y < _height;
+                    y < appData.Height;
                     y++)
                     for (var x = 0;
-                        x < _width;
+                        x < appData.Width;
                         x++) {
-                        var i = 16 * (x - y * _width + (_height - 1) * _width);
-                        var j = 1 * (x + y * _width);
+                        var i = 16 * (x - y * appData.Width + (appData.Height - 1) * appData.Width);
+                        var j = 1 * (x + y * appData.Width);
                         _data[i + 2]  = colors[j].r;
                         _data[i + 3]  = colors[j].g;
                         _data[i + 4]  = colors[j].b;
@@ -124,39 +122,34 @@ namespace indoorMobility.Scripts.Game
             player.Move(_action);
 
             // update hallway if necessary
-            if (hallway.EndPosition - player.transform.position.z <= 36) //TODO: hardcoded  hallway length
+            if (hallway.EndPosition - player.transform.position.z <= 2*appData.VisibleHallwayPieces - 4)
                 hallway.updateHallway();
         }
 
-        public void ChangeSeed()
+        public void SetManualSeed()
         {
             appData.RandomSeed = _action;
         }
 
 
         private void Start() {
+            
+            // All GameManager variables are stored in appData
             appData = GameObject.Find("GameManager").GetComponent<GameManager>().appData;
+            
+            // Scripts of the children GameObjects that constitute the environment
             player = Player.GetComponent<Player>();
             hallway = Hallway.GetComponent<Hallway>();
-
-            if (Camera.main != null) {
-                _targetTexture = Camera.main.targetTexture;
-                _height = _targetTexture.height;
-                _width = _targetTexture.width;
-                imgSynthesis = Camera.main.GetComponent<ImgSynthesis>();
-            }
-            _data = new byte[2 + 16 * _width * _height];      
-
             
+            // Initialize camera
+            _camera = Camera.main;
+            (_camera.targetTexture = new RenderTexture(appData.Width, appData.Height, 0)).Create();
+            _targetTexture = Camera.main.targetTexture;
+            imgSynthesis = _camera.GetComponent<ImgSynthesis>();
+            
+            // Output data
+            _data = new byte[2 + 16 * appData.Width * appData.Height];
         }
-
-
-
-        public void FixedUpdate()
-        {
-            Debug.Log(player.transform.position.z);
-        }
-
 
         #endregion;
 

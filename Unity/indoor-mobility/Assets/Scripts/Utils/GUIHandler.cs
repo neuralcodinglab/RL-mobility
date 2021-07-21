@@ -55,10 +55,10 @@ namespace indoorMobility.Scripts.Utils
             appData.WallBumpReward = (byte) int.Parse(wallField.text);
         }
 
-        public void ChangeComplexity()
-        {
-            appData.ComplexHallway = complexToggle.isOn;
-        }
+        //public void ChangeComplexity()
+       // {
+       //     appData.ComplexHallway = complexToggle.isOn;
+       // }
 
         public void StartServer()
         {
