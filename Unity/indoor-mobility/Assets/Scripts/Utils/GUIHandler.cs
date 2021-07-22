@@ -6,70 +6,79 @@ using UnityEngine.SceneManagement;
 
 namespace indoorMobility.Scripts.Utils
 {
-
-
-
-
     public class GUIHandler : MonoBehaviour
     {
         [SerializeField] private AppData appData;
-        [SerializeField] private Text ipField;
-        [SerializeField] private Text portField;
-        [SerializeField] private Text fwdField;
-        [SerializeField] private Text sideField;
-        [SerializeField] private Text boxField;
-        [SerializeField] private Text wallField;
+        [SerializeField] private GameObject ipField;
+        [SerializeField] private GameObject portField;
+        [SerializeField] private GameObject fwdField;
+        [SerializeField] private GameObject sideField;
+        [SerializeField] private GameObject boxField;
+        [SerializeField] private GameObject wallField;
+        [SerializeField] private GameObject trgField;
+        [SerializeField] private GameObject maxStepsField;
+        [SerializeField] private Text ipStatus;
+        [SerializeField] private Text portStatus;
+        [SerializeField] private Text seedStatus;
+        [SerializeField] private Text clientStatus;
 
-        [SerializeField] private Toggle complexToggle;
+        // Store values from input field in appData
+        public void ChangeIP () => appData.IpAddress = ipField.GetComponent<InputField>().text;
+        public void ChangePort() => appData.Port = int.Parse(portField.GetComponent<InputField>().text);
+        public void ChangeForward() => appData.ForwardStepReward = (byte) int.Parse(fwdField.GetComponent<InputField>().text);
+        public void ChangeSide() => appData.SideStepReward = (byte) int.Parse(sideField.GetComponent<InputField>().text);
+        public void ChangeBox() => appData.BoxBumpReward = (byte) int.Parse(boxField.GetComponent<InputField>().text);
+        public void ChangeWall() => appData.WallBumpReward = (byte) int.Parse(wallField.GetComponent<InputField>().text);
+        public void ChangeTarget() => appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().text);
+        public void ChangeMaxSteps() => appData.MaxSteps = (byte)int.Parse(maxStepsField.GetComponent<InputField>().text);
+        
 
-
-
-        public void ChangeIP ()
-        {
-            appData.IpAddress = ipField.text;
-        }
-
-        public void ChangePort()
-        {
-            appData.Port = int.Parse(portField.text);
-        }
-
-        public void ChangeForward()
-        {
-            appData.ForwardStepReward = (byte) int.Parse(fwdField.text);
-        }
-
-        public void ChangeSide()
-        {
-            appData.SideStepReward = (byte) int.Parse(sideField.text);
-        }
-
-        public void ChangeBox()
-        {
-            Debug.Log(boxField.text);
-            appData.BoxBumpReward = (byte) int.Parse(boxField.text);
-        }
-
-        public void ChangeWall()
-        {
-            appData.WallBumpReward = (byte) int.Parse(wallField.text);
-        }
-
-        //public void ChangeComplexity()
-       // {
-       //     appData.ComplexHallway = complexToggle.isOn;
-       // }
-
+        // Start server upon clicking the button
         public void StartServer()
         {
             SceneManager.LoadScene(1);
         }
 
+        // Close application upon clicking the quit button 
         public void QuitApplication()
         {
             Application.Quit();
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(0); // only works in unity editor
         }
 
+        // If server is running, the connection status is displayed (and updated using below function)
+        public void UpdateRunningStatus()
+        {
+            ipStatus.text = appData.IpAddress;
+            portStatus.text = appData.Port.ToString();
+            seedStatus.text = appData.RandomSeed.ToString();
+            clientStatus.text = appData.ClientConnected ? "Connected" : "Not connected";
+        }
+
+        public void Start()
+        {
+
+            /* // Uncomment for storing settings from previous session
+            ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.IpAddress;
+            portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.Port.ToString(); 
+            fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.ForwardStepReward).ToString();
+            sideField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.SideStepReward).ToString();
+            boxField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.BoxBumpReward).ToString();
+            wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.WallBumpReward).ToString();
+            trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
+            maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
+            */
+
+            // Revert to default settings (comment out to automatically load last-used settings) 
+            appData.IpAddress = ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text;
+            appData.Port = int.Parse(portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.ForwardStepReward = (byte)int.Parse(fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.SideStepReward = (byte)int.Parse(sideField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.BoxBumpReward = (byte)int.Parse(boxField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.WallBumpReward = (byte)int.Parse(wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            appData.MaxSteps = (byte)int.Parse(maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+
+        }
     }
 }

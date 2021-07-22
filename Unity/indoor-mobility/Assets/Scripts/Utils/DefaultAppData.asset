@@ -17,11 +17,13 @@ MonoBehaviour:
   _height: 128
   _ipAddress: 127.0.0.1
   _port: 13000
-  _forwardStepReward: 10
+  _clientConnected: 0
+  _forwardStepReward: 100
   _sideStepReward: 101
   _boxBumpReward: 120
   _wallBumpReward: 110
-  _randomSeed: -1459799870
+  _targetReachedReward: 10
+  _randomSeed: 0
   _forwardSpeed: 0.5
   _sideStepDistance: 0.95
   _maxSteps: 100

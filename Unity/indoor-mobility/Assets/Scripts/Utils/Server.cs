@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 using System.Collections;
+using indoorMobility.Scripts.Game;
 
 namespace indoorMobility.Scripts.Utils
 {
@@ -10,6 +11,7 @@ namespace indoorMobility.Scripts.Utils
     {
         #region;
 
+        private AppData appData; // (store connection status in appData)
         private readonly IPAddress _ip;
         private readonly int _port;
         private TcpClient _tcpClient;
@@ -36,8 +38,7 @@ namespace indoorMobility.Scripts.Utils
 
         public async void Start()
         {
-
-
+            appData = GameObject.Find("GameManager").GetComponent<GameManager>().appData;
             try
             {
                 _tcpListener = new TcpListener(_ip, _port);
@@ -50,7 +51,11 @@ namespace indoorMobility.Scripts.Utils
                     {
                         _tcpClient = tcpClient;
                         OnDataRead();
+
+                        // Visualize connection status in GUI
                         Debug.Log("Client was connected.");
+                        appData.ClientConnected = true;
+                        GameObject.Find("GUI").GetComponent<GUIHandler>().UpdateRunningStatus();
                     }
                     else
                     {
@@ -106,7 +111,10 @@ namespace indoorMobility.Scripts.Utils
                     Array.Clear(data, 0, 2);
                 }
 
+                // Visualize connection status
                 Debug.Log("Client was disconnected.");
+                appData.ClientConnected = false;
+                GameObject.Find("GUI").GetComponent<GUIHandler>().UpdateRunningStatus();
             }
             catch (Exception e)
             {

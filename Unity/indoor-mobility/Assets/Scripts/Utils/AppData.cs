@@ -5,127 +5,59 @@ namespace indoorMobility.Scripts.Utils
     [CreateAssetMenu(menuName = "IndoorMobility/AppData")]
     public class AppData : ScriptableObject
     {
-
-        #region
         // Game data
-        [SerializeField] private float _timescale;
-        [SerializeField] private int _width;
-        [SerializeField] private int _height;
-        public float TimeScale
-        {
-            get => _timescale;
-            set => _timescale = value;
-        }
+        #region
+        [SerializeField] private float _timescale;  // time scale for physics update (default: 1)
+        [SerializeField] private int _width;        // image width (for state)
+        [SerializeField] private int _height;       // image height (for state)
 
-        public int Width
-        {
-            get => _width;
-            set => _width = value;
-        }
-        public int Height
-        {
-            get => _height;
-            set => _height = value;
-        }
-
-
+        public float TimeScale { get => _timescale; set => _timescale = value; }
+        public int Width {get => _width; set => _width = value;}
+        public int Height {  get => _height; set => _height = value; }
         #endregion
 
-
-        #region
         // Server data 
-        [SerializeField] private string _ipAddress;
-        [SerializeField] private int _port;
-        public string IpAddress
-        {
-            get => _ipAddress;
-            set => _ipAddress = value;
-        }
-        public int Port
-        {
-            get => _port;
-            set => _port = value;
-        }
+        #region
+        [SerializeField] private string _ipAddress;     // Server address
+        [SerializeField] private int _port;             // Server port
+        [SerializeField] private bool _clientConnected; // Flag for established connection with client
+        
+        public string IpAddress {get => _ipAddress; set => _ipAddress = value;}
+        public int Port {get => _port; set => _port = value;}
+        public bool ClientConnected {get => _clientConnected; set => _clientConnected = value;}
         #endregion
 
-
-        #region
         // Rewards
-        [SerializeField] private byte _forwardStepReward;
-        [SerializeField] private byte _sideStepReward;
-        [SerializeField] private byte _boxBumpReward;
-        [SerializeField] private byte _wallBumpReward;
-        [SerializeField] private byte _targetReachedReward;
-
-        public byte ForwardStepReward
-        {
-            get => _forwardStepReward;
-            set => _forwardStepReward = value;
-        }
-        public byte SideStepReward
-        {
-            get => _sideStepReward;
-            set => _sideStepReward = value;
-        }
-        public byte BoxBumpReward
-        {
-            get => _boxBumpReward;
-            set => _boxBumpReward = value;
-        }
-        public byte WallBumpReward
-        {
-            get => _wallBumpReward;
-            set => _wallBumpReward = value;
-        }
-        public byte TargetReachedReward
-        {
-            get => _targetReachedReward;
-            set => _targetReachedReward = value;
-        }
-        #endregion
-
         #region
+        [SerializeField] private byte _forwardStepReward;   // Reward for (succesful) forward step
+        [SerializeField] private byte _sideStepReward;      // (succesful) left- or rightward step
+        [SerializeField] private byte _boxBumpReward;       // collision with box obstacle
+        [SerializeField] private byte _wallBumpReward;      // collision with the wall
+        [SerializeField] private byte _targetReachedReward; // reward for (every) forwardStepCount >= maxSteps 
 
-
+        public byte ForwardStepReward{get => _forwardStepReward; set => _forwardStepReward = value;}
+        public byte SideStepReward{get => _sideStepReward; set => _sideStepReward = value;}
+        public byte BoxBumpReward{get => _boxBumpReward; set => _boxBumpReward = value;}
+        public byte WallBumpReward{get => _wallBumpReward; set => _wallBumpReward = value;}
+        public byte TargetReachedReward{get => _targetReachedReward; set => _targetReachedReward = value;}
+        #endregion
 
         // Environment data
-        [SerializeField] private int _randomSeed;
-        [SerializeField] private float _forwardSpeed;
-        [SerializeField] private float _sideStepDistance;
-        [SerializeField] private int _maxSteps;
-        [SerializeField] private float _camRotJitter;
-        [SerializeField] private int _visibleHallwayPieces;
+        #region
+        [SerializeField] private int _randomSeed;           // random number generator (RNG) seed (default: randomly allocated at reset)
+        [SerializeField] private int _maxSteps;             // target no. forward steps (hallway 'finish'). At test run (fixed hallway length) it is set at 560 
+        [SerializeField] private float _forwardSpeed;       // forward displacement (z-direction) for each step
+        [SerializeField] private float _sideStepDistance;   // sideways displacement
+        [SerializeField] private float _camRotJitter;       // range for random camera rotations (training only)
+        [SerializeField] private int _visibleHallwayPieces; // length of (constantly updated) hallway
 
-        public int RandomSeed
-        {
-            get => _randomSeed;
-            set => _randomSeed = value;
-        }
-        public float ForwardSpeed
-        {
-            get => _forwardSpeed;
-            set => _forwardSpeed = value;
-        }
-        public float SideStepDistance
-        {
-            get => _sideStepDistance;
-            set => _sideStepDistance = value;
-        }
-        public int MaxSteps
-        {
-            get => _maxSteps;
-            set => _maxSteps = value;
-        }
-        public float CamRotJitter
-        {
-            get => _camRotJitter;
-            set => _camRotJitter = value;
-        }
-        public int VisibleHallwayPieces
-        {
-            get => _visibleHallwayPieces;
-            set => _visibleHallwayPieces = value;
-        }
+
+        public int RandomSeed{get => _randomSeed; set => _randomSeed = value;}
+        public int MaxSteps { get => _maxSteps; set => _maxSteps = value; }
+        public float ForwardSpeed{get => _forwardSpeed; set => _forwardSpeed = value;}
+        public float SideStepDistance{get => _sideStepDistance;set => _sideStepDistance = value;}
+        public float CamRotJitter {get => _camRotJitter; set => _camRotJitter = value;}
+        public int VisibleHallwayPieces{get => _visibleHallwayPieces;set => _visibleHallwayPieces = value;}
         #endregion
 
 
@@ -140,6 +72,7 @@ namespace indoorMobility.Scripts.Utils
             // Server
             _ipAddress = "127.0.0.1";
             _port =  13000;
+            _clientConnected = false;
 
             // Rewards
             _forwardStepReward = (byte)10;

@@ -4,6 +4,9 @@ using System.Linq;
 using ImgSynthesis = indoorMobility.Scripts.ImageSynthesis.ImgSynthesis;
 using indoorMobility.Scripts.Utils;
 
+// JR: code by Sam Danen (mostly unaltered)
+
+
 namespace indoorMobility.Scripts.Game
 {
     public class Hallway : MonoBehaviour {

@@ -1,17 +1,19 @@
-# Local files
-import pyClientRLagentPytorch
-import utils
-
-# Numpy, OpenCV
+# Numpy, OpenCV, os, sys
 import numpy as np
 import cv2
+import os, sys
+
+# Local files
+sys.path.insert(0,os.path.dirname(os.path.realpath(__file__)) + '/../')
+import pyClient
+import utils
 
 # Connect to Unity environment
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
 port       = 13000       # Port number that the TCP/IP interface listens to
 size       = 128
 screen_height = screen_width = size
-environment = pyClientRLagentPytorch.Environment(ip = ip, port = port, size = size)
+environment = pyClient.Environment(ip = ip, port = port, size = size)
 assert (environment.client is not None), "Please start Unity server environment first!"
 
 # reset the environment

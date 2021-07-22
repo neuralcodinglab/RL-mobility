@@ -9,18 +9,11 @@ namespace indoorMobility.Scripts.Game
     public class Environment : MonoBehaviour {
         #region;
 
-        // Input/Output variables and appData (game settings)
-        private AppData appData;
-        private int _action;
-        private byte[] _data;
-        private byte _end, _reward;
+        // Flag for using user-specified seed for RNG (instead of random time-based allocation)
+        private bool _manualSeed;
 
-        // Image processing variables
-        private Camera _camera;
-      //  private int _height, _width;
-        private List<Color32[]> _state;
-        private RenderTexture _targetTexture;
-        private ImgSynthesis imgSynthesis; // Img processing script attached to the camera
+        // Game settings 
+        private AppData appData;
 
         // Children environment GameObjects and corresponding scripts
         [SerializeField] private GameObject Hallway;
@@ -28,23 +21,29 @@ namespace indoorMobility.Scripts.Game
         private Player player;
         private Hallway hallway;
 
+        // Image processing variables
+        private Camera _camera;
+        private List<Color32[]> _state;
+        private RenderTexture _targetTexture;
+        private ImgSynthesis imgSynthesis; // Img processing script attached to the camera
+
+        // Input/Output variables
+        private int _action;
+        private byte[] _data;
+        private byte _end, _reward;
+
         // Can be accessed by player script or game manager
         public byte Reward { set => _reward = value;}
         public byte End { set => _end = value;}
 
-        #endregion
-
-        #region;
-
         public byte Input { set => _action = value; }
 
-        public byte[] Output { //output to be send to python, consists of 1 byte to determine if the loop ended, 1 byte for the reward and x bytes with the camera view of the agent
-            get {//the amount of bytes needed for the camera view is dependent on the size selected
+        public byte[] Output { //output to python: 1 byte to determine if the loop ended, 1 byte for the reward and 16 x w x h bytes with the camera view of the agent (state)
+            get {
                 _data[0] = _end;
                 _data[1] = _reward;
 
-                // Render the state
-                // (for the different render types: colors, semantic segmentation, depth, etc.)
+                // Render the state (for the different render types: colors, semantic segmentation, depth, etc.)
                 var tex = new Texture2D(appData.Width, appData.Height);
                 _state = new List<Color32[]>();
                 for(var idx = 0; idx<=5; idx++)
@@ -107,12 +106,19 @@ namespace indoorMobility.Scripts.Game
         #region;
 
         public void Reset() 
-        { //reset all values, delete all hallwaypieces and rebuild a new starting hallway
+        { 
+           // Generate new (random) RNG seed (unless manual seed was specified) 
+           appData.RandomSeed = _manualSeed ? appData.RandomSeed : (int)System.DateTime.Now.Ticks;
            Random.InitState(appData.RandomSeed);
+           _manualSeed = false; // pick a random seed at next reset
+           
+           // Reset hallway and agent
            hallway.Reset(_action);
            player.Reset(_action);
+
+           // Reset image processing script
            imgSynthesis.OnSceneChange();
-           appData.RandomSeed = (int)System.DateTime.Now.Ticks;
+
         }
 
 
@@ -121,20 +127,21 @@ namespace indoorMobility.Scripts.Game
         {   //Move the player (environment.Reward and environment.End are updated by player)
             player.Move(_action);
 
-            // update hallway if necessary
+            // Generate new hallway pieces as player moves towards finish
             if (hallway.EndPosition - player.transform.position.z <= 2*appData.VisibleHallwayPieces -6)
                 hallway.updateHallway();
         }
 
         public void SetManualSeed()
         {
+            // set manual RNG seed (becomes effective at Reset())
+            _manualSeed = true;
             appData.RandomSeed = _action;
         }
 
-
         private void Start() {
             
-            // All GameManager variables are stored in appData
+            // All Game settings are stored in appData
             appData = GameObject.Find("GameManager").GetComponent<GameManager>().appData;
             
             // Scripts of the children GameObjects that constitute the environment

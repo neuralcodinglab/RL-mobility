@@ -5,7 +5,8 @@ using System.IO;
 
 
 namespace indoorMobility.Scripts.ImageSynthesis
-{ 
+{
+	// OBTAINED FROM: https://github.com/U3DC/Image-Synthesis-for-Machine-Learning  
 
 	// @TODO:
 	// . support custom color wheels in optical flow via lookup textures

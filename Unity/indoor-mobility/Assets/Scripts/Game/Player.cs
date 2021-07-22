@@ -50,6 +50,7 @@ namespace indoorMobility.Scripts.Game
                         {
                             environment.Reward = appData.TargetReachedReward;
                             environment.End = 3;
+                            _forwardStepCount = 0;
                         }
                         break;
                     }

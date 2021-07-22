@@ -4,9 +4,7 @@ using System.Net;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using indoorMobility.Scripts.Utils;
-using Environment = indoorMobility.Scripts.Game.Environment;
-//using ImgSynthesis = indoorMobility.Scripts.ImageSynthesis.ImgSynthesis;
-
+using Environment = indoorMobility.Scripts.Game.Environment; // prevent ambiguity with System.Environment
 
 namespace indoorMobility.Scripts.Game
 {
@@ -18,49 +16,19 @@ namespace indoorMobility.Scripts.Game
 
 #pragma warning disable 0649 //disable warnings about serializefields not being assigned that occur in certain unity versions
         [SerializeField] public AppData appData;
-        [SerializeField] private GameObject Environment; // Env. GameObject
-        private Environment environment; // Env. script
-
-        /*
-
-        //[SerializeField] private GameObject player;
-        [SerializeField] private GameObject player;
-      //  [SerializeField] private GameObject capsule1;
-        [Header("Connection settings, need to be consistent with the settings in python:")]
-        [SerializeField] public string ipAddress;
-        [SerializeField] private int _port;
-        [SerializeField] private int _size;
-        [SerializeField] private float _timescale;
-        [Header("Agent movement settings, if changed need to also change things in the c# code:")]
-        [SerializeField] private float forwardSpeed;
-        [SerializeField] private float sideStepDistance;
-        [Header("Complex texture hallway or not:")]
-        [SerializeField] private bool complexHallway;
-        [Header("Max amount of steps reachable in training and validation, and amount of camera jitter:")]
-        [SerializeField] private int maxSteps;
-        [SerializeField] private float jitterAmount;
-        [Header("A random number seed to keep validation and testing consistent:")]
-        [SerializeField] private int randomValSeed;
-        [SerializeField] private int randomTestSeed;
-        [Header("Reward settings, these are bytes so can only use numbers between 0 and 256:")]
-        [SerializeField] private byte forwardStepReward;
-        [SerializeField] private byte leftRightStepReward;
-        [SerializeField] private byte boxBumpReward;
-        [SerializeField] private byte wallBumpReward;
-        */
+        [SerializeField] private GameObject Environment;
+        [SerializeField] private GameObject GUI;
+        private Environment environment;
+        private GUIHandler guiHandler;
 
 #pragma warning restore 0649 //reanable the unassigned variable warnings 
         public delegate void DataSentEventListener(byte[] data);
         public event DataSentEventListener DataSent;
-
-
-
         #endregion;
 
 
 
         #region;
-
         private void OnDataReceived(byte[] data)
         {
             environment.Input = data[1];
@@ -73,7 +41,7 @@ namespace indoorMobility.Scripts.Game
         }
 
 
-
+        // This enumerator is invoked as co-routine (constantly waiting for input commands)
         private IEnumerator Tick(float timescale)
         {
             _command = Command.None;
@@ -84,15 +52,18 @@ namespace indoorMobility.Scripts.Game
                         yield return null;
                         continue;
 
-                    case Command.Reset:
+                    // Reset environment
+                    case Command.Reset:  
                         environment.Reset();
                         Time.timeScale = timescale;
                         yield return new WaitForFixedUpdate();
                         Time.timeScale = 0;
                         OnDataSent();
                         _command = Command.None;
+                        guiHandler.UpdateRunningStatus();
                         break;
 
+                    // Make the agent move
                     case Command.Step:
                         environment.Step();
                         Debug.Log("environment step command was executed");
@@ -103,9 +74,10 @@ namespace indoorMobility.Scripts.Game
                         _command = Command.None;
                         break;
 
+                    // Manually set the random number generator seed 
                     case Command.SetSeed:
                         environment.SetManualSeed();
-                        Debug.Log("Random seed was changed");
+                        Debug.Log("using manually specified RNG seed");
                         Time.timeScale = timescale;
                         yield return new WaitForFixedUpdate();
                         Time.timeScale = 0;
@@ -113,25 +85,24 @@ namespace indoorMobility.Scripts.Game
                         _command = Command.None;
                         break;
 
-
                     default: throw new ArgumentOutOfRangeException();
                 }
         }
-
-
         #endregion;
 
 
         #region;
-
-
-
         protected void Awake() //Gets run when the game starts once
         {   // Instantiate environment
             appData.RandomSeed = (int)System.DateTime.Now.Ticks;
-            environment = Environment.GetComponent<Environment>(); //Instantiate(environment);
+            environment = Environment.GetComponent<Environment>(); // Get script component from GameObject 'Environment'
+
+            // Let the GUI display the server status 
+            guiHandler = GUI.GetComponent<GUIHandler>();
+            guiHandler.UpdateRunningStatus();
 
             // Start server
+            appData.ClientConnected = false;
             _server = new Server(IPAddress.Parse(appData.IpAddress), appData.Port);
             _server.DataRead += OnDataReceived;
             DataSent += _server.OnDataSent;
