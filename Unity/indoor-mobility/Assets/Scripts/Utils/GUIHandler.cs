@@ -58,7 +58,7 @@ namespace indoorMobility.Scripts.Utils
         public void Start()
         {
 
-            /* // Uncomment for storing settings from previous session
+            // Using settings from previous session
             ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.IpAddress;
             portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.Port.ToString(); 
             fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.ForwardStepReward).ToString();
@@ -67,9 +67,9 @@ namespace indoorMobility.Scripts.Utils
             wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.WallBumpReward).ToString();
             trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
             maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
-            */
 
-            // Revert to default settings (comment out to automatically load last-used settings) 
+
+            /* Uncomment to instead revert to default settings (comment out to automatically load last-used settings) 
             appData.IpAddress = ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text;
             appData.Port = int.Parse(portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
             appData.ForwardStepReward = (byte)int.Parse(fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
@@ -78,6 +78,7 @@ namespace indoorMobility.Scripts.Utils
             appData.WallBumpReward = (byte)int.Parse(wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
             appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
             appData.MaxSteps = (byte)int.Parse(maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
+            */
 
         }
     }

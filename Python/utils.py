@@ -43,3 +43,19 @@ class PhospheneSimulator(object):
                 ry = np.clip(np.round(y+deviation[1]),0,size[1]-1).astype(int)
                 grid[rx,ry]= intensity
         return grid
+
+class FrameStack(object):
+    def __init__(self, stack_size=4):
+        self.stack_size = stack_size
+        self.stack = []
+        
+    def update_with(self,frame):
+        self.stack.append(frame)
+        if len(self.stack) > self.stack_size:
+            self.stack.pop(0)
+
+    def get(self):
+        return torch.cat(self.stack, dim=1)
+
+    def __len__(self):
+        return len(self.stack)
