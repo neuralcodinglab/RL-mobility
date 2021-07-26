@@ -15,7 +15,7 @@ class Environment:
             self.client = None
 
     def reset(self, kind=0):
-        """" {'tr_complex': 0, 'tr_simple': 1,'test_complex': 2, 'test_simple': 3}"""
+         # 0: plain 1: complex 2: plain_test 3: complex_test
         self._send(1, kind)
         return self._receive()
 
