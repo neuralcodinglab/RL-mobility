@@ -9,7 +9,10 @@
 /Unity/*/[Bb]uilds/
 /Unity/*/[Ll]ogs/
 /Unity/*/[Uu]ser[Ss]ettings/
+/Unity/indoor-doors-task
+/Unity/indoor-signs-task
 /Python/**/Out
+
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
