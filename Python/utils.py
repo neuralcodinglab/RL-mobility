@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+import torch
+
 
 class PhospheneSimulator(object):
     def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.9, aperture=.66, sigma=0.8, custom_grid=None):
@@ -53,6 +55,7 @@ class FrameStack(object):
         self.stack.append(frame)
         if len(self.stack) > self.stack_size:
             self.stack.pop(0)
+        return self.get()
 
     def get(self):
         return torch.cat(self.stack, dim=1)
