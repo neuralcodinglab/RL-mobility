@@ -57,8 +57,10 @@ namespace indoorMobility.Scripts.Utils
 
         public void Start()
         {
+            // Comment out to use settings from previous session
+            appData.Reset();
 
-            // Using settings from previous session
+            // Update the GUI-placeholder texts with the actual settings
             ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.IpAddress;
             portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.Port.ToString(); 
             fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.ForwardStepReward).ToString();
@@ -67,18 +69,6 @@ namespace indoorMobility.Scripts.Utils
             wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.WallBumpReward).ToString();
             trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
             maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
-
-
-            /* Uncomment to instead revert to default settings (comment out to automatically load last-used settings) 
-            appData.IpAddress = ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text;
-            appData.Port = int.Parse(portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.ForwardStepReward = (byte)int.Parse(fwdField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.SideStepReward = (byte)int.Parse(sideField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.BoxBumpReward = (byte)int.Parse(boxField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.WallBumpReward = (byte)int.Parse(wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            appData.MaxSteps = (byte)int.Parse(maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text);
-            */
 
         }
     }

@@ -62,7 +62,7 @@ namespace indoorMobility.Scripts.Utils
 
 
 
-        private void Reset()
+        public void Reset()
         {
             // Game Manager
             _timescale = 1;
@@ -79,7 +79,7 @@ namespace indoorMobility.Scripts.Utils
             _sideStepReward = (byte)101;
             _boxBumpReward = (byte)120;
             _wallBumpReward = (byte)110;
-            _targetReachedReward = (byte)80;
+            _targetReachedReward = (byte)10;
 
             // Random seed (for different hallway variations, random camera rotations)
             _randomSeed = 0;
