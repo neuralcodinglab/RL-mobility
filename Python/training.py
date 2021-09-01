@@ -129,10 +129,12 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
     for episode in range(cfg['max_episodes']):
 
-        # @TODO: SAVE AFTER VALIDATION
+        # Valdation loop
         if episode % 50 == 0:
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
+            
+            # Save best model
             if val_reward > best_reward:
                 print("new best model")
                 best_reward = val_reward
@@ -241,3 +243,5 @@ def train(agent, environment, img_processing, optimizer, cfg):
                 break
             else:
                 state = next_state
+                
+               
