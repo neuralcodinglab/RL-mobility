@@ -93,7 +93,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
                 endless_loops += 1
                 step_count += t
                 break
-            elif cfg['reset_upon_end_signal'][end]:
+            elif RESET_UPON_END_SIGNAL[end]:
                 step_count += t
                 break
             else:
