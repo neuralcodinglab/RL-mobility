@@ -1,0 +1,4 @@
+episode,step_count,wall_collisions,box_collisions,endless_loops,reward,train_loss,validation
+0,481,0,0,2,4222,0,1
+0,0,0,0,0,0,3560.011916973628,0
+1,27,0,0,1,0,3562.5832389453426,0
