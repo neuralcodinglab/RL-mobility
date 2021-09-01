@@ -12,7 +12,6 @@ namespace indoorMobility.Scripts.Game
         private Environment environment;
         private Camera camera;
 
-        private int _maxSteps;
         private int _forwardStepCount;
         private string _collidedWith;
 
@@ -114,11 +113,10 @@ namespace indoorMobility.Scripts.Game
             SetRandomCamRotation();
             _collidedWith = "";
             _forwardStepCount = 0;
-            _maxSteps = appData.MaxSteps;
             if (action == 2 || action == 3) // Test condition
             {
                 camera.transform.rotation = Quaternion.Euler(0, 0, 0);
-                _maxSteps = 560; // TODO: Hardcoded for now (14 test hallways * 10 pieces * 4 steps)
+                appData.MaxSteps = 560; // TODO: Hardcoded for now (14 test hallways * 10 pieces * 4 steps)
             }
         }
 
