@@ -12,7 +12,7 @@
 /Unity/indoor-doors-task
 /Unity/indoor-signs-task
 /Python/**/Out
-
+/Python/Berfu/
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
@@ -78,3 +78,4 @@ crashlytics-build.properties
 # Pychache
 **/__pycache__
 **/.ipynb_checkpoints
+**.DS_Store
