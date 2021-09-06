@@ -169,7 +169,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         # Target net is updated once in a few episodes (double Q-learning)
         if episode % cfg['target_update']  == 0:  #episodes
             print('episode {}, target net updated'.format(episode))
-            agent.update_target_net
+            agent.update_target_net()
 
 
         # Reset environment at start of episode

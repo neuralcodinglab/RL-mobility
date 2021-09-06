@@ -90,7 +90,7 @@ class DoubleDQNAgent():
         self.batch_size     = batch_size
     
     def update_target_net(self):
-        selt.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.load_state_dict(self.policy_net.state_dict())
         
     def select_action(self,state, validation=False):
         sample = torch.rand(1) if not validation else 1
