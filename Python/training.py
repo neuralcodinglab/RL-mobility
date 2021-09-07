@@ -183,6 +183,10 @@ def train(agent, environment, img_processing, optimizer, cfg):
             _, _, frame_raw = environment.step(0)
             frame = img_processing(frame_raw).to(agent.device) 
             state = frame_stack.update_with(frame)
+            
+        # Toggle training mode 
+        agent.policy_net.train()
+        agent.target_net.train()
 
         # Episode starts here:
         for t in count(): 
