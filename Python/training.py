@@ -154,6 +154,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
                              endless_loops, episode_reward,agent.eps_threshold,total_loss, 0]) 
 
         # Reset counters 
+        total_loss = 0 # COMMENT OUT TO REGISTER CUMULATIVE LOSS
         wall_collisions = 0
         box_collisions = 0
         episode_reward = 0
