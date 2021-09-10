@@ -24,7 +24,7 @@ class DQN(nn.Module):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))    
+        return self.head(x.flatten(start_dim=1))    
     
     
 #replay memory
@@ -94,9 +94,9 @@ class DoubleDQNAgent():
         
     def select_action(self,state, validation=False):
         sample = torch.rand(1) if not validation else 1
-        eps_threshold = max(self.eps_end, (self.eps_start-(self.eps_delta*self.step_count)))
+        self.eps_threshold = max(self.eps_end, (self.eps_start-(self.eps_delta*self.step_count)))
         self.step_count += 1
-        if sample > eps_threshold:
+        if sample > self.eps_threshold:
             with torch.no_grad():
                 return self.policy_net(state).argmax(1)
         else:

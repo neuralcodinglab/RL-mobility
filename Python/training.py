@@ -80,7 +80,9 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             # 2. interpret reward
             if reward > 100:
                 reward = -(reward -100)
+            reward /= 10
 
+                
             # 3. Store performance and training measures
             total_reward += reward;
             if end == 1:
@@ -99,7 +101,6 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             else:
                 state = next_state
                 
-    agent.policy_net.train()
     print('step count {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(step_count, wall_collisions, box_collisions, endless_loops, total_reward))
     return step_count, wall_collisions, box_collisions, endless_loops, total_reward
 
@@ -116,7 +117,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['episode','step_count', 
                          'wall_collisions', 'box_collisions',
-                         'endless_loops','reward', 'train_loss', 'validation'])
+                         'endless_loops','reward', 'epsilon', 'train_loss', 'validation'])
 
     # Counters 
     wall_collisions = 0
@@ -143,14 +144,14 @@ def train(agent, environment, img_processing, optimizer, cfg):
             # Write validation performance to log file
             with open(cfg['logfile'], 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow([episode, *val_performance, 0, 1])        
+                writer.writerow([episode, *val_performance,0, 0, 1])        
 
         # Write training performance to log file
         with open(cfg['logfile'], 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow([episode,step_count,
                              wall_collisions, box_collisions, 
-                             endless_loops, episode_reward,total_loss, 0]) 
+                             endless_loops, episode_reward,agent.eps_threshold,total_loss, 0]) 
 
         # Reset counters 
         wall_collisions = 0
@@ -183,15 +184,12 @@ def train(agent, environment, img_processing, optimizer, cfg):
             _, _, frame_raw = environment.step(0)
             frame = img_processing(frame_raw).to(agent.device) 
             state = frame_stack.update_with(frame)
-            
-        # Toggle training mode 
-        agent.policy_net.train()
-        agent.target_net.train()
 
         # Episode starts here:
         for t in count(): 
 
             # 1. Agent performs a step (based on the current state) and obtains next state
+            agent.policy_net.eval()
             action = agent.select_action(state)
             side_steps = side_steps + 1  if action != 0 else 0
             end, reward, frame_raw = environment.step(action.item())
@@ -202,7 +200,8 @@ def train(agent, environment, img_processing, optimizer, cfg):
             # 2. Interpret reward signal
             if reward > 100:
                 reward = -(reward -100)
-
+            reward /= 10
+                
             # 3. Push the transition to replay memory (in the right format & shape)
             reward = torch.tensor([reward], device=agent.device,dtype=torch.float)
             action = action.unsqueeze(0)
@@ -210,6 +209,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
 
             # 4. optimize model
+            agent.policy_net.train()
             if len(agent.memory) > cfg['replay_start_size']:
 
                 state_action_values, expected_state_action_values = agent.forward()
