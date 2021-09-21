@@ -33,7 +33,7 @@ from model import Transition
 
 
 
-def validation_loop(agent,environment,img_processing, cfg, memory_trace, val_seeds=[251,252,253,254,255]):
+def validation_loop(agent,environment,img_processing, memory_trace, cfg, val_seeds=[251,252,253,254,255]):
     # How to handle the different end signals
     RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
                              1:False,   # Box collision
@@ -107,7 +107,7 @@ def validation_loop(agent,environment,img_processing, cfg, memory_trace, val_see
 
 
 
-def train(agent, environment, img_processing, optimizer, cfg, memory_trace):
+def train(agent, environment, img_processing, optimizer, memory_trace, cfg):
     
     # For reproducability, reset the RNG seed
     torch.manual_seed(cfg['seed'])
