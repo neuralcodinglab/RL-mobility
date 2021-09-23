@@ -4,6 +4,7 @@
 """
 import numpy as np
 import math
+import cv2
 
 class Memory(object):
     def __init__(self, theta, decay, trace_increase, decay_activation, input_effect, n_phosphenes):
@@ -63,7 +64,10 @@ class PhospheneSimulator(object):
         # Activate phosphenes in empty array
         active_phosphenes, memory_trace = self.activate_phosphenes(image_phosphenes, activation_mask, memory_trace)
         
-        return active_phosphenes, memory_trace
+        #image generated is rgb, convert to grayscale for the RL agent
+        grayscale = cv2.cvtColor(active_phosphenes, cv2.COLOR_BGR2GRAY)
+        
+        return grayscale, memory_trace
     
     def pol2cart(self, theta, rho):
         x = rho * np.cos(theta)
@@ -107,10 +111,10 @@ class PhospheneSimulator(object):
         memory_trace.memory = np.vstack([memory_trace.memory, new_memory])  #Append new memory to trace
         memory_trace.outputs = np.vstack([memory_trace.outputs, new_memory]) #do the same to store output values
             
-        print('memory trace rows')
-        print(len(memory_trace.memory))
-        print('memory trace columns')
-        print(len(memory_trace.memory[0]))
+        #print('memory trace rows - frame number')
+        #print(len(memory_trace.memory))
+        #print('memory trace columns' - total number of phosphenes)
+        #print(len(memory_trace.memory[0]))
         #print('n_frame')
             
         #loop over every phosphene

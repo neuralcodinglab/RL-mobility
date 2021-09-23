@@ -62,7 +62,8 @@ def validation_loop(agent,environment,img_processing, memory_trace, cfg, val_see
         frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
             _, _, frame_raw = environment.step(0)
-            frame, memory_trace = img_processing(frame_raw, memory_trace).to(agent.device) 
+            frame, memory_trace = img_processing(frame_raw, memory_trace)
+            frame.to(agent.device) 
             state = frame_stack.update_with(frame)
         
         side_steps = 0
@@ -73,7 +74,8 @@ def validation_loop(agent,environment,img_processing, memory_trace, cfg, val_see
             # 1. Agent performs a step (based on the current state) and obtains next state
             action = agent.select_action(state,validation=True)
             end, reward, next_state_raw = environment.step(action.item())
-            frame, memory_trace = img_processing(next_state_raw, memory_trace).to(agent.device) 
+            frame, memory_trace = img_processing(next_state_raw, memory_trace)
+            frame.to(agent.device) 
             next_state = frame_stack.update_with(frame)
             side_steps = side_steps + 1  if action != 0 else 0
             
@@ -183,7 +185,8 @@ def train(agent, environment, img_processing, optimizer, memory_trace, cfg):
         frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
             _, _, frame_raw = environment.step(0)
-            frame, memory_trace = img_processing(frame_raw, memory_trace).to(agent.device) 
+            frame, memory_trace = img_processing(frame_raw, memory_trace)
+            frame.to(agent.device) 
             state = frame_stack.update_with(frame)
 
         # Episode starts here:
@@ -195,7 +198,8 @@ def train(agent, environment, img_processing, optimizer, memory_trace, cfg):
             side_steps = side_steps + 1  if action != 0 else 0
             end, reward, frame_raw = environment.step(action.item())
             agent_died = cfg['reset_upon_end_signal'][end] or side_steps > cfg['reset_after_nr_sidesteps']
-            frame, memory_trace = img_processing(frame_raw, memory_trace).to(agent.device)
+            frame, memory_trace = img_processing(frame_raw, memory_trace)
+            frame.to(agent.device)
             next_state = frame_stack.update_with(frame) if not agent_died else None
 
             # 2. Interpret reward signal
