@@ -5,6 +5,7 @@
 import numpy as np
 import math
 import cv2
+import random
 
 class Memory(object):
     def __init__(self, theta, decay, trace_increase, decay_activation, input_effect, n_phosphenes):
@@ -54,6 +55,8 @@ class PhospheneSimulator(object):
 
         # Translating polar phosphene coordinates to x and y coordinates.
         self.c_x, self.c_y = self.pol2cart(self.phosphenes[:,0] ,self.phosphenes[:,1])
+
+
         
     def __call__(self, activation_mask, memory_trace):
         """ Returns the phosphene simulation (image) and a memory trace object, given an activation mask
@@ -67,7 +70,11 @@ class PhospheneSimulator(object):
         #image generated is rgb, convert to grayscale for the RL agent
         grayscale = cv2.cvtColor(active_phosphenes, cv2.COLOR_BGR2GRAY)
         
+        #img_gabor = self.apply_gabor(grayscale,10)
+        
         return grayscale, memory_trace
+    
+
     
     def pol2cart(self, theta, rho):
         x = rho * np.cos(theta)
@@ -204,6 +211,7 @@ class PhospheneSimulator(object):
             
             
         return image_phosphenes, memory_trace
+
     
     def makeGaussian(self, size, fwhm = 3, center=None):
         """ Make a square gaussian kernel.
@@ -221,5 +229,31 @@ class PhospheneSimulator(object):
         else:
             x0 = center[0]
             y0 = center[1]
+            
+        gaussian = np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)  
+        
+        filtered_gaussian = self.apply_gabor(gaussian, size)
     
-        return np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)        
+        
+        return filtered_gaussian    
+
+    def apply_gabor(self, img, size):
+        #applies a gabor filter to the image/kernel
+        
+        # cv2.getGaborKernel(ksize, sigma, theta, lambda, gamma, psi, ktype)
+        #ksize = 9         # = 21  size of gabor filter (n, n) - odd number (min 9?)
+        ksize = int(np.ceil(size) // 2 * 2 + 1)
+        if ksize<9:
+            ksize = 9
+        sigma = 4           # = 8.0 standard deviation of the gaussian function
+        #theta = np.pi/4    # = np.pi/4 orientation of the normal to the parallel stripes
+        theta = random.uniform(0, 181)*np.pi/180
+        g_lambda = 10     # = 10.0 wavelength of the sunusoidal factor
+        gamma = 0.5         # = 0.5  spatial aspect ratio
+        psi = 0             # = 0 phase offset
+        ktype = cv2.CV_32F  # = cv2.CV_32F type and range of values that each pixel in the gabor kernel can hold
+        
+        g_kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, g_lambda, gamma, psi, ktype)
+        filtered_img = cv2.filter2D(img, cv2.CV_8UC3, g_kernel)
+        
+        return filtered_img        
