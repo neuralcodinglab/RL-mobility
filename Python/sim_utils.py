@@ -245,11 +245,11 @@ class PhospheneSimulator(object):
         ksize = int(np.ceil(size) // 2 * 2 + 1)
         if ksize<9:
             ksize = 9
-        sigma = 4           # = 8.0 standard deviation of the gaussian function
+        sigma = 2          # = 8.0 standard deviation of the gaussian function
         #theta = np.pi/4    # = np.pi/4 orientation of the normal to the parallel stripes
         theta = random.uniform(0, 181)*np.pi/180
         g_lambda = 10     # = 10.0 wavelength of the sunusoidal factor
-        gamma = 0.5         # = 0.5  spatial aspect ratio
+        gamma = 0.5        # = 0.5  spatial aspect ratio
         psi = 0             # = 0 phase offset
         ktype = cv2.CV_32F  # = cv2.CV_32F type and range of values that each pixel in the gabor kernel can hold
         

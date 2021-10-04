@@ -26,7 +26,7 @@ import utils
 import model
 from model import Transition
 
-def test(agent, environment, img_processing, cfg, memory_trace):
+def test(agent, environment, img_processing, memory_trace, cfg):
 
     # Counters 
     wall_collisions = 0
@@ -44,7 +44,8 @@ def test(agent, environment, img_processing, cfg, memory_trace):
     frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
     for _ in range(cfg['stack_size'] ):
         _, _, frame_raw = environment.step(0)
-        frame, memory_trace = img_processing(frame_raw, memory_trace).to(agent.device) 
+        frame, memory_trace = img_processing(frame_raw, memory_trace)
+        frame.to(agent.device) 
         state = frame_stack.update_with(frame)
 
     # Episode starts here:
@@ -61,7 +62,8 @@ def test(agent, environment, img_processing, cfg, memory_trace):
         
         end, reward, frame_raw = environment.step(action.item())
         agent_finished = cfg['reset_upon_end_signal'][end]
-        frame, memory_trace = img_processing(frame_raw, memory_trace).to(agent.device)
+        frame, memory_trace = img_processing(frame_raw, memory_trace)
+        frame.to(agent.device)
         state = frame_stack.update_with(frame) if not agent_finished else None
 
         # 2. Interpret reward signal
