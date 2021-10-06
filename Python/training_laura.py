@@ -128,7 +128,7 @@ def train(agent, environment, img_processing, optimizer, memory_trace, cfg):
     endless_loops = 0
     total_loss = 0
     step_count = 0
-    best_reward = 0
+    best_reward = float('-inf')
 
     for episode in range(cfg['max_episodes']):
 

@@ -256,4 +256,5 @@ class PhospheneSimulator(object):
         g_kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, g_lambda, gamma, psi, ktype)
         filtered_img = cv2.filter2D(img, cv2.CV_8UC3, g_kernel)
         
-        return filtered_img        
+        return filtered_img   
+
