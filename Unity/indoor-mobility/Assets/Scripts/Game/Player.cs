@@ -14,6 +14,7 @@ namespace indoorMobility.Scripts.Game
 
         private int _forwardStepCount;
         private string _collidedWith;
+        private int _maxForwardSteps;
 
         public int ForwardStepCount { get => _forwardStepCount;}
         public string CollidedWith { get => _collidedWith;}
@@ -45,7 +46,7 @@ namespace indoorMobility.Scripts.Game
                         environment.Reward = appData.ForwardStepReward;
                         _forwardStepCount++;
 
-                        if (_forwardStepCount >= appData.MaxSteps) // TODO Is this necessary? Or do it in Python?
+                        if (_forwardStepCount >= _maxForwardSteps) // TODO Is this necessary? Or do it in Python?
                         {
                             environment.Reward = appData.TargetReachedReward;
                             environment.End = 3;
@@ -104,7 +105,7 @@ namespace indoorMobility.Scripts.Game
             environment = GameObject.Find("Environment").GetComponent<Environment>();
             appData = GameObject.Find("GameManager").GetComponent<GameManager>().appData;
             camera = Camera.main;
-            Reset(2);
+            Reset(0); //JR 11-10-'21: was Reset(2); but don't know why
         }
 
         public void Reset(int action)
@@ -116,7 +117,11 @@ namespace indoorMobility.Scripts.Game
             if (action == 2 || action == 3) // Test condition
             {
                 camera.transform.rotation = Quaternion.Euler(0, 0, 0);
-                appData.MaxSteps = 560; // TODO: Hardcoded for now (14 test hallways * 10 pieces * 4 steps)
+                _maxForwardSteps = 560; // TODO: Hardcoded for now (14 test hallways * 10 pieces * 4 steps)
+            }
+            else
+            {
+                _maxForwardSteps = appData.MaxSteps;
             }
         }
 

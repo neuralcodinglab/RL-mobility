@@ -30,7 +30,7 @@ namespace indoorMobility.Scripts.Utils
         public void ChangeBox() => appData.BoxBumpReward = (byte) int.Parse(boxField.GetComponent<InputField>().text);
         public void ChangeWall() => appData.WallBumpReward = (byte) int.Parse(wallField.GetComponent<InputField>().text);
         public void ChangeTarget() => appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().text);
-        public void ChangeMaxSteps() => appData.MaxSteps = (byte)int.Parse(maxStepsField.GetComponent<InputField>().text);
+        public void ChangeMaxSteps() => appData.MaxSteps = int.Parse(maxStepsField.GetComponent<InputField>().text);
         
 
         // Start server upon clicking the button
@@ -55,11 +55,27 @@ namespace indoorMobility.Scripts.Utils
             clientStatus.text = appData.ClientConnected ? "Connected" : "Not connected";
         }
 
-        public void Start()
+        public void ResetAppData()
         {
-            // Comment out to use settings from previous session
+            Debug.Log("Appdata was restored to default values");
             appData.Reset();
 
+            // Set text fields to null (so the placeholders will be visible)
+            ipField.GetComponent<InputField>().text = null;
+            portField.GetComponent<InputField>().text = null;
+            fwdField.GetComponent<InputField>().text = null;
+            sideField.GetComponent<InputField>().text = null;
+            boxField.GetComponent<InputField>().text = null;
+            wallField.GetComponent<InputField>().text = null;
+            trgField.GetComponent<InputField>().text = null;
+            maxStepsField.GetComponent<InputField>().text = null;
+
+            // Update the placeholders according to values in appData
+            Start();
+        }
+
+        public void Start()
+        {
             // Update the GUI-placeholder texts with the actual settings
             ipField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.IpAddress;
             portField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.Port.ToString(); 
