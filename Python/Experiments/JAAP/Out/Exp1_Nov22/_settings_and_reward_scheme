@@ -1,0 +1,31 @@
+### Description of experiment
+
+Test different hyperparameter settings (Learning rate and Gamma) 
+
+
+## Reward scheme
+10 for each forward step
+-1 for each side step
+-20 for each box collision
+-10 for each wall collision
+50 at every 200 forward steps 
+
+## Training parameters 
+MAX_EPISODES = 1200 # number of episodes (an episode ends after agent hits a box)
+MAX_STEPS  = 1e7  # number of optimization steps (each time step the model parameters are updated)
+RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
+                         1:True,   # Box collision
+                         2:False,  # Wall collision
+                         3:True}  # Reached step target
+RESET_AFTER_NR_SIDESTEPS = 5
+
+
+
+## seed in [0, 1, 2, 3, 4]
+## phosphene_resolution in [5, 10,  18, 26, 34, 42, 50, None]
+
+## complexity in ['plain', 'complex']
+
+## GAMMA 0.5
+
+## LR_DQN 0.0008

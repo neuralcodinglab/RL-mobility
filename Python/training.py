@@ -39,17 +39,17 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
                              1:False,   # Box collision
                              2:False,   # Wall collision
                              3:True}    # Reached step target
-    
+
     # Set nn.module to evaluation mode
     agent.policy_net.eval()
-    
-    # Reset counters 
+
+    # Reset counters
     wall_collisions = 0
     box_collisions = 0
     total_reward = 0
     endless_loops = 0
     step_count = 0
-    
+
 
     for seed in val_seeds:
 
@@ -57,32 +57,32 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
         _, _, _ = environment.setRandomSeed(seed)
         _, _, _ = environment.reset(cfg['training_condition'])
 
-        
+
         # Create an empty frame stack and fill it with frames
         frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
             _, _, frame_raw = environment.step(0)
-            frame = img_processing(frame_raw).to(agent.device) 
+            frame = img_processing(frame_raw).to(agent.device)
             state = frame_stack.update_with(frame)
-        
+
         side_steps = 0
 
         # Episode starts here:
-        for t in count(): 
+        for t in count():
 
             # 1. Agent performs a step (based on the current state) and obtains next state
             action = agent.select_action(state,validation=True)
             end, reward, next_state_raw = environment.step(action.item())
-            frame = img_processing(next_state_raw).to(agent.device) 
+            frame = img_processing(next_state_raw).to(agent.device)
             next_state = frame_stack.update_with(frame)
             side_steps = side_steps + 1  if action != 0 else 0
-            
+
             # 2. interpret reward
             if reward > 100:
                 reward = -(reward -100)
-            reward /= 10
+            reward *= cfg['reward_multiplier']
 
-                
+
             # 3. Store performance and training measures
             total_reward += reward;
             if end == 1:
@@ -100,7 +100,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
                 break
             else:
                 state = next_state
-                
+
     print('step count {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(step_count, wall_collisions, box_collisions, endless_loops, total_reward))
     return step_count, wall_collisions, box_collisions, endless_loops, total_reward
 
@@ -108,18 +108,18 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
 
 
 def train(agent, environment, img_processing, optimizer, cfg):
-    
+
     # For reproducability, reset the RNG seed
     torch.manual_seed(cfg['seed'])
 
-    # Write header to logfile 
+    # Write header to logfile
     with open(cfg['logfile'], 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['episode','step_count', 
+        writer.writerow(['episode','step_count',
                          'wall_collisions', 'box_collisions',
                          'endless_loops','reward', 'epsilon', 'train_loss', 'validation'])
 
-    # Counters 
+    # Counters
     wall_collisions = 0
     box_collisions = 0
     episode_reward = 0
@@ -134,7 +134,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         if episode % 50 == 0:
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
-            
+
             # Save best model
             if val_reward > best_reward:
                 print("new best model")
@@ -144,16 +144,16 @@ def train(agent, environment, img_processing, optimizer, cfg):
             # Write validation performance to log file
             with open(cfg['logfile'], 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow([episode, *val_performance,0, 0, 1])        
+                writer.writerow([episode, *val_performance,0, 0, 1])
 
         # Write training performance to log file
         with open(cfg['logfile'], 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow([episode,step_count,
-                             wall_collisions, box_collisions, 
-                             endless_loops, episode_reward,agent.eps_threshold,total_loss, 0]) 
+                             wall_collisions, box_collisions,
+                             endless_loops, episode_reward,agent.eps_threshold,total_loss, 0])
 
-        # Reset counters 
+        # Reset counters
         total_loss = 0 # COMMENT OUT TO REGISTER CUMULATIVE LOSS
         wall_collisions = 0
         box_collisions = 0
@@ -183,11 +183,11 @@ def train(agent, environment, img_processing, optimizer, cfg):
         frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
             _, _, frame_raw = environment.step(0)
-            frame = img_processing(frame_raw).to(agent.device) 
+            frame = img_processing(frame_raw).to(agent.device)
             state = frame_stack.update_with(frame)
 
         # Episode starts here:
-        for t in count(): 
+        for t in count():
 
             # 1. Agent performs a step (based on the current state) and obtains next state
             agent.policy_net.eval()
@@ -201,8 +201,8 @@ def train(agent, environment, img_processing, optimizer, cfg):
             # 2. Interpret reward signal
             if reward > 100:
                 reward = -(reward -100)
-            reward /= 10
-                
+            reward *= cfg['reward_multiplier']
+
             # 3. Push the transition to replay memory (in the right format & shape)
             reward = torch.tensor([reward], device=agent.device,dtype=torch.float)
             action = action.unsqueeze(0)
@@ -240,7 +240,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
                 box_collisions += 1
             if end == 2:
                 wall_collisions +=1
-            if side_steps > cfg['reset_after_nr_sidesteps']:    
+            if side_steps > cfg['reset_after_nr_sidesteps']:
                 endless_loops +=1
 
             # 6. the episode ends here if agent performed any 'lethal' action (specified in RESET_UPON_END_SIGNAL)
@@ -248,5 +248,119 @@ def train(agent, environment, img_processing, optimizer, cfg):
                 break
             else:
                 state = next_state
-                
-               
+
+if __name__ == "__main__":
+    ### TODO: ARGPARSER ###
+
+    ## Environment
+    IMSIZE = 128
+    STACK_SIZE = 4
+    N_ACTIONS = 3
+    IP  = "127.0.0.1" # Ip address that the TCP/IP interface listens to
+    PORT = 13000       # Port number that the TCP/IP interface listens to
+    environment =  pyClient.Environment(ip = IP, port = PORT, size = IMSIZE) # or choose # DummyEnvironment()
+
+    ## Image processing
+    PHOSPHENE_RESOLUTION = 50
+    class ImageProcessor(object):
+        def __init__(self, phosphene_resolution=None, imsize=128, canny_threshold=70):
+            """ @TODO
+            - Extended image processing
+            """
+            self.thr_high = canny_threshold
+            self.thr_low  = canny_threshold // 2
+            self.imsize = imsize
+            if phosphene_resolution is not None:
+                self.simulator = utils.PhospheneSimulator(phosphene_resolution=(phosphene_resolution,phosphene_resolution),size=(128,128),
+                                                         jitter=0.25,intensity_var=0.9,aperture=.66,sigma=0.60,)
+            else:
+                self.simulator = None
+
+        def __call__(self,state_raw,):
+            frame = environment.state2usableArray(state_raw)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            if self.simulator is not None:
+                frame = cv2.Canny(frame, self.thr_low,self.thr_high)
+                frame = self.simulator(frame)
+            frame = frame.astype('float32')
+            return torch.Tensor(frame / 255.).view(1,1,self.imsize, self.imsize)
+    img_processing = ImageProcessor(phosphene_resolution = PHOSPHENE_RESOLUTION)
+
+    ## DQN Agent
+    BATCH_SIZE = 128 #original 128
+    GAMMA = 0.5
+    EPS_START = 0.95
+    EPS_END = 0.05
+    EPS_DECAY_steps = 4000
+    EPS_DECAY = (EPS_START - EPS_END)/EPS_DECAY_steps
+    REPLAY_START_SIZE =  1500
+    TARGET_UPDATE = 10 #episodes
+    DEVICE = 'cuda:0'
+    MEMORY_CAPACITY = 12000
+    agent = model.DoubleDQNAgent(imsize=IMSIZE,
+                     in_channels=STACK_SIZE,
+                     n_actions=N_ACTIONS,
+                     memory_capacity=MEMORY_CAPACITY,
+                     eps_start=EPS_START,
+                     eps_end=EPS_END,
+                     eps_delta=EPS_DECAY,
+                     gamma_discount = GAMMA,
+                     batch_size = BATCH_SIZE,
+                     device=DEVICE)
+
+    ## Optimizer
+    LR_DQN = 0.01
+    optimizer = optim.Adam(agent.policy_net.parameters(), lr = LR_DQN)
+
+    ## Training parameters
+    OUT_PATH = './DemoTraining'
+    MODEL_PATH = os.path.join(OUT_PATH,'demo.pth')
+    LOGFILE = os.path.join(OUT_PATH,'train_stats.csv')
+    SEED = 0
+    TRAINING_CONDITION = 0
+    MAX_EPISODES = 1000 # number of episodes (an episode ends after agent hits a box)
+    MAX_STEPS  = 1e6 # number of optimization steps (each time step the model parameters are updated)
+    RESET_AFTER_NR_SIDESTEPS = 5
+    RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
+                             1:True,   # Box collision
+                             2:False,   # Wall collision
+                             3:True}  # Reached step target
+    REWARD_MULTIPLIER        = 1.
+
+    ## Write replay memory to output videos
+    def save_replay():
+        out = cv2.VideoWriter(os.path.join(OUT_PATH,'{}.avi'.format(model_name)),
+                              cv2.VideoWriter_fourcc('M','J','P','G'),
+                              2, (IMSIZE,IMSIZE))
+        for i, (state, action, next_state, reward) in enumerate(agent.memory.memory):
+            frame = (255*state[0,-1].detach().cpu().numpy()).astype('uint8')
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR )
+            frame = cv2.putText(frame,'reward: {:0.1f}'.format(reward.item()),(0,20),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.35,color=(0,0,255))
+            frame = cv2.putText(frame,'action: {}'.format(action.item()),(0,10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.35,color=(0,0,255))
+            out.write(frame)
+        out.release()
+
+    ## Start training
+    cfg = dict()
+    cfg['model_path']               = MODEL_PATH # Save path for model
+    cfg['logfile']                  = LOGFILE # To save the optimizaiton stats
+    cfg['seed']                     = SEED # for reproducability of random factors
+    cfg['training_condition']       = TRAINING_CONDITION # 0: plain training, 1: complex training, 2: plain testing 3: complex testing
+    cfg['max_episodes']             = MAX_EPISODES
+    cfg['max_steps']                = MAX_STEPS # Training stops after either max episodes is reached, or max optimization steps
+    cfg['stack_size']               = STACK_SIZE # For frame stacking
+    cfg['target_update']            = TARGET_UPDATE #Number of episodes after which DQN target net is updated
+    cfg['reset_after_nr_sidesteps'] = RESET_AFTER_NR_SIDESTEPS # Training is stopped when model keeps side stepping (i.e. it stops reveicing positive rewards)
+    cfg['reset_upon_end_signal']    = RESET_UPON_END_SIGNAL # Decide whether to consider different end signals as final state (i.e. box collision, wall collision, step target reached)
+    cfg['replay_start_size']        = REPLAY_START_SIZE # Start optimizing when replay memory contains this number of transitions
+    cfg['reward_multiplier']        = REWARD_MULTIPLIER # Multiplies the reward signal with this value
+    print('training...')
+    if not os.path.isdir(OUT_PATH):
+        os.makedirs(OUT_PATH)
+    train(agent, environment, img_processing, optimizer, cfg)
+    print('finished training')
+    save_replay()
