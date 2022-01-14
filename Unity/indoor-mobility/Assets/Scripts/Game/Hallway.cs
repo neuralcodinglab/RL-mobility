@@ -27,6 +27,7 @@ namespace indoorMobility.Scripts.Game
         [SerializeField] private int nrOfCurrentPieces;
         [SerializeField] private float lightIntensityLowerBound;
         [SerializeField] private float lightIntensityUpperBound;
+        [SerializeField] private float lightingIntensityScaling;
         #pragma warning restore 0649 //reanable the unassigned variable warnings 
         private GameObject[] currentPieces;
         private GameObject[] currentLights;
@@ -146,6 +147,7 @@ namespace indoorMobility.Scripts.Game
             currentIndexEmpty = 0;
             nrOfEmptyPieces = 2;
             nrOfCurrentPieces = appData.VisibleHallwayPieces;
+            lightingIntensityScaling = appData.LightIntensity;
             currentZLights = -12f; //offset starting light behind the agent so the beginning is not to dark in comparison to the rest
             currentLightsIndex = 0;
             nrOfLights = (int)(nrOfCurrentPieces/2) +4; // On average 1 light every 2 pieces with 4 lights as buffer behind him
@@ -209,6 +211,7 @@ namespace indoorMobility.Scripts.Game
             for (int i = 0; i < nrOfLights; i++) { 
                 float randomZVariation = Random.Range(-1f, 1f); //add random amount of variation to the z position
                 float randomIntensity = Random.Range(lightIntensityLowerBound, lightIntensityUpperBound); //vary the intensity of the pointlight
+                randomIntensity *= lightingIntensityScaling;
                 currentZLights += 4;
                 currentLights[i] = Instantiate(pointLight, new Vector3(0, 2.4f, currentZLights + randomZVariation), Quaternion.Euler(0, 0, 0));
                 currentLights[i].GetComponent<Light>().intensity = randomIntensity;
@@ -296,7 +299,8 @@ namespace indoorMobility.Scripts.Game
         public void updateLights() { //function to add a new light in front and remove one in the back
             float randomZVariation = Random.Range(-1f, 1f); //add random amount of variation to the z position
             float randomIntensity = Random.Range(lightIntensityLowerBound, lightIntensityUpperBound); //vary the intensity of the pointlight
-            currentZLights += 4;
+            randomIntensity *= lightingIntensityScaling;
+        currentZLights += 4;
             Destroy(currentLights[currentLightsIndex]);
             currentLights[currentLightsIndex] = Instantiate(pointLight, new Vector3(0, 2.4f, currentZLights + randomZVariation), Quaternion.Euler(0, 0, 0));
             currentLights[currentLightsIndex].GetComponent<Light>().intensity = randomIntensity;
@@ -385,6 +389,7 @@ namespace indoorMobility.Scripts.Game
             for (int i = 0; i < nrOfLights; i++) { 
                 float randomZVariation = Random.Range(-1f, 1f); //add random amount of variation to the z position
                 float randomIntensity = Random.Range(lightIntensityLowerBound, lightIntensityUpperBound); //vary the intensity of the pointlight
+                randomIntensity *= lightingIntensityScaling;
                 currentZLights += 4;
                 currentLights[i] = Instantiate(pointLight, new Vector3(0, 2.4f, currentZLights + randomZVariation), Quaternion.Euler(0, 0, 0));
                 currentLights[i].GetComponent<Light>().intensity = randomIntensity;

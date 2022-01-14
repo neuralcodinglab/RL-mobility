@@ -17,10 +17,13 @@ namespace indoorMobility.Scripts.Utils
         [SerializeField] private GameObject wallField;
         [SerializeField] private GameObject trgField;
         [SerializeField] private GameObject maxStepsField;
+        [SerializeField] private GameObject lightingSlider;
+        [SerializeField] private GameObject lightingSliderValue;
         [SerializeField] private Text ipStatus;
         [SerializeField] private Text portStatus;
         [SerializeField] private Text seedStatus;
         [SerializeField] private Text clientStatus;
+
 
         // Store values from input field in appData
         public void ChangeIP () => appData.IpAddress = ipField.GetComponent<InputField>().text;
@@ -31,7 +34,10 @@ namespace indoorMobility.Scripts.Utils
         public void ChangeWall() => appData.WallBumpReward = (byte) int.Parse(wallField.GetComponent<InputField>().text);
         public void ChangeTarget() => appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().text);
         public void ChangeMaxSteps() => appData.MaxSteps = int.Parse(maxStepsField.GetComponent<InputField>().text);
-        
+        public void ChangeLightingSlider(){
+            appData.LightIntensity = lightingSlider.GetComponent<Slider>().value / 10;
+            lightingSliderValue.GetComponent<Text>().text = "Light Intensity: " + appData.LightIntensity;
+        }
 
         // Start server upon clicking the button
         public void StartServer()
@@ -85,7 +91,7 @@ namespace indoorMobility.Scripts.Utils
             wallField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.WallBumpReward).ToString();
             trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
             maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
-
+            lightingSlider.GetComponent<Slider>().value = appData.LightIntensity * 10;
         }
     }
 }

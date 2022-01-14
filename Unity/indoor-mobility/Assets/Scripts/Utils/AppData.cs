@@ -50,14 +50,15 @@ namespace indoorMobility.Scripts.Utils
         [SerializeField] private float _sideStepDistance;   // sideways displacement
         [SerializeField] private float _camRotJitter;       // range for random camera rotations (training only)
         [SerializeField] private int _visibleHallwayPieces; // length of (constantly updated) hallway
-
+        [SerializeField] private float _lightIntensity;     // Scaling factor to adjust the light intensity
 
         public int RandomSeed{get => _randomSeed; set => _randomSeed = value;}
         public int MaxSteps { get => _maxSteps; set => _maxSteps = value; }
         public float ForwardSpeed{get => _forwardSpeed; set => _forwardSpeed = value;}
         public float SideStepDistance{get => _sideStepDistance;set => _sideStepDistance = value;}
         public float CamRotJitter {get => _camRotJitter; set => _camRotJitter = value;}
-        public int VisibleHallwayPieces{get => _visibleHallwayPieces;set => _visibleHallwayPieces = value;}
+        public int VisibleHallwayPieces {get => _visibleHallwayPieces;set => _visibleHallwayPieces = value;}
+        public float LightIntensity { get => _lightIntensity; set =>_lightIntensity = value;}
         #endregion
 
 
@@ -78,7 +79,7 @@ namespace indoorMobility.Scripts.Utils
             _forwardStepReward = (byte)10;
             _sideStepReward = (byte)101;
             _boxBumpReward = (byte)120;
-            _wallBumpReward = (byte)110;
+            _wallBumpReward = (byte)115;
             _targetReachedReward = (byte)10;
 
             // Random seed (for different hallway variations, random camera rotations)
@@ -86,6 +87,7 @@ namespace indoorMobility.Scripts.Utils
 
             // Hallway data
             _visibleHallwayPieces = 20;
+            _lightIntensity = 1.0f;
 
             // Player data
             _forwardSpeed = 0.5f;
