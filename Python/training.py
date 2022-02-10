@@ -20,6 +20,10 @@ from torchsummary import summary
 import cv2
 
 
+import itertools
+import re
+import pandas as pd
+import numpy as np
 
 
 # local files
@@ -27,6 +31,7 @@ sys.path.insert(0, '../')
 import pyClient
 import utils
 import model
+import imgproc
 from model import Transition
 
 
@@ -59,10 +64,10 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
 
 
         # Create an empty frame stack and fill it with frames
-        frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
+        frame_stack = imgproc.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
-            _, _, frame_raw = environment.step(0)
-            frame = img_processing(frame_raw).to(agent.device)
+            _, _, state_raw = environment.step(0)
+            frame = img_processing(state_raw).to(agent.device)
             state = frame_stack.update_with(frame)
 
         side_steps = 0
@@ -180,7 +185,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         _, _, _ = environment.reset(cfg['training_condition'])
 
         # Create an empty frame stack and fill it with frames
-        frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
+        frame_stack = imgproc.FrameStack(stack_size=cfg['stack_size'] )
         for _ in range(cfg['stack_size'] ):
             _, _, frame_raw = environment.step(0)
             frame = img_processing(frame_raw).to(agent.device)
@@ -262,29 +267,7 @@ if __name__ == "__main__":
 
     ## Image processing
     PHOSPHENE_RESOLUTION = 50
-    class ImageProcessor(object):
-        def __init__(self, phosphene_resolution=None, imsize=128, canny_threshold=70):
-            """ @TODO
-            - Extended image processing
-            """
-            self.thr_high = canny_threshold
-            self.thr_low  = canny_threshold // 2
-            self.imsize = imsize
-            if phosphene_resolution is not None:
-                self.simulator = utils.PhospheneSimulator(phosphene_resolution=(phosphene_resolution,phosphene_resolution),size=(128,128),
-                                                         jitter=0.25,intensity_var=0.9,aperture=.66,sigma=0.60,)
-            else:
-                self.simulator = None
-
-        def __call__(self,state_raw,):
-            frame = environment.state2usableArray(state_raw)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            if self.simulator is not None:
-                frame = cv2.Canny(frame, self.thr_low,self.thr_high)
-                frame = self.simulator(frame)
-            frame = frame.astype('float32')
-            return torch.Tensor(frame / 255.).view(1,1,self.imsize, self.imsize)
-    img_processing = ImageProcessor(phosphene_resolution = PHOSPHENE_RESOLUTION)
+    img_processing = imgproc.ImageProcessor(phosphene_resolution = PHOSPHENE_RESOLUTION)
 
     ## DQN Agent
     BATCH_SIZE = 128 #original 128
@@ -295,7 +278,7 @@ if __name__ == "__main__":
     EPS_DECAY = (EPS_START - EPS_END)/EPS_DECAY_steps
     REPLAY_START_SIZE =  1500
     TARGET_UPDATE = 10 #episodes
-    DEVICE = 'cuda:0'
+    DEVICE = 'cpu'
     MEMORY_CAPACITY = 12000
     agent = model.DoubleDQNAgent(imsize=IMSIZE,
                      in_channels=STACK_SIZE,
@@ -327,22 +310,7 @@ if __name__ == "__main__":
                              3:True}  # Reached step target
     REWARD_MULTIPLIER        = 1.
 
-    ## Write replay memory to output videos
-    def save_replay():
-        out = cv2.VideoWriter(os.path.join(OUT_PATH,'{}.avi'.format(model_name)),
-                              cv2.VideoWriter_fourcc('M','J','P','G'),
-                              2, (IMSIZE,IMSIZE))
-        for i, (state, action, next_state, reward) in enumerate(agent.memory.memory):
-            frame = (255*state[0,-1].detach().cpu().numpy()).astype('uint8')
-            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR )
-            frame = cv2.putText(frame,'reward: {:0.1f}'.format(reward.item()),(0,20),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=0.35,color=(0,0,255))
-            frame = cv2.putText(frame,'action: {}'.format(action.item()),(0,10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale=0.35,color=(0,0,255))
-            out.write(frame)
-        out.release()
+
 
     ## Start training
     cfg = dict()
@@ -363,4 +331,4 @@ if __name__ == "__main__":
         os.makedirs(OUT_PATH)
     train(agent, environment, img_processing, optimizer, cfg)
     print('finished training')
-    save_replay()
+    utils.save_replay()

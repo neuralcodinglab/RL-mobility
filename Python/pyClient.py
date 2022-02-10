@@ -22,7 +22,7 @@ class Environment:
     def step(self, action):
         self._send(2, action)
         return self._receive()
-    
+
     def setRandomSeed(self, action):
         self._send(3, action)
         return self._receive()
@@ -32,12 +32,13 @@ class Environment:
         end    = data[0]
         reward = data[1]
         state  = [data[i] for i in range(2, len(data))] # raw state
+        state  = self.state2arrays(state)
         return end, reward, state
-    
+
     def state2arrays(self,state):
         if self.channels == 3:
             return {'colors' : self.state2usableArray(state),}
-        
+
         else:
             state  = np.array(state, "uint8").reshape(self.size, self.size, self.channels)
             arrays = {'colors' : state[...,:3],
@@ -47,7 +48,7 @@ class Environment:
                     'flow'   : state[...,12:15],
                     'depth'  : state[...,15]}
             return arrays
-    
+
     def state2usableArray(self, state):
         return np.array(state, "uint8").reshape(self.size, self.size, 16)[...,:3]
 

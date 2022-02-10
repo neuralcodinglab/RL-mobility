@@ -7,6 +7,7 @@ import os, sys
 sys.path.insert(0,os.path.dirname(os.path.realpath(__file__)) + '/../')
 import pyClient
 import utils
+import imgproc
 
 # Connect to Unity environment
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
@@ -35,8 +36,8 @@ disp = Window(windowname='Hallway', size=(600,600))
 # Initialize some phosphene simulations
 class Simulator():
     def __init__(self, low=(26,26),high=(60,60),**kwargs):
-        self.low_res  = utils.PhospheneSimulator(phosphene_resolution=low,**kwargs)
-        self.high_res = utils.PhospheneSimulator(phosphene_resolution=high,**kwargs)
+        self.low_res  = imgproc.PhospheneSimulator(phosphene_resolution=low,**kwargs)
+        self.high_res = imgproc.PhospheneSimulator(phosphene_resolution=high,**kwargs)
         self.sim_mode = 0
 
     def __call__(self,frame):
@@ -58,8 +59,7 @@ simulator = Simulator(low=(26,26),high=(60,60),sigma=1.2)
 while environment.client:
 
     # Display current state
-    frame = environment.state2usableArray(state_raw)
-    frame = simulator(frame)
+    frame = simulator(state_raw['colors'])
     disp.show(frame)
 
     # Get key
@@ -79,7 +79,7 @@ while environment.client:
     if key == ord('r'):
         end, reward, state_raw = environment.reset()
         print('action: {}, reward: {}, end {}'.format(0, reward, end))
-              
+
     if key == 49:
         simulator.sim_mode = 0
 

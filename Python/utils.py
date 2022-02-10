@@ -1,64 +1,56 @@
 import numpy as np
 import cv2
 import torch
+import itertools
+import re
+import pandas as pd
 
 
-class PhospheneSimulator(object):
-    def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.9, aperture=.66, sigma=0.8, custom_grid=None):
-        """Phosphene simulator class to create gaussian-based phosphene simulations from activation mask
-        on __init__, provide custom phosphene grid or use the grid parameters to create one
-        - aperture: receptive field of each phosphene (uses dilation of the activation mask to achieve this)
-        - sigma: the size parameter for the gaussian phosphene simulation """
-        if custom_grid is None:
-            self.phosphene_resolution = phosphene_resolution
-            self.size = size
-            self.phosphene_spacing = np.divide(size,phosphene_resolution)
-            self.jitter = jitter
-            self.intensity_var = intensity_var
-            self.grid = self.create_regular_grid(self.phosphene_resolution,self.size,self.jitter,self.intensity_var)
-            self.aperture = np.round(aperture*self.phosphene_spacing[0]).astype(int) #relative aperture > dilation kernel size
-        else:
-            self.grid = custom_grid
-            self.aperture = aperture
-        self.sigma = sigma
-        self.dilation_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(self.aperture,self.aperture))
-        self.k_size = 11 #np.round(4*sigma+1).astype(int) # rule of thumb: choose k_size>3*sigma
+def load_train_configs(yaml_file):
+    """Loads a configuration from yaml file, returns DataFrame with all models and their training parameters"""
+   
+    # Load yaml file as dictionary 
+    with open(yaml_file) as file:
+        raw_content = yaml.load(file) # nested dictionary
+        unpacked = {k:v for params in raw_content.values() for k,v in params.items()}
+        assert not any(isinstance(v,dict) for v in unpacked.values()), "Only single-valued parameters or lists of single-valued parameters are accepted"
+    
+    # single-valued (fixed) training parameters
+    fxd_params = {k:v for k,v in unpacked.items() if type(v) is not list} 
+    
+    # variable training parameters. All combinations are used in training (grid-search)
+    var_params = {k:v for k,v in unpacked.items() if type(v) is list} 
+    combinations = list(itertools.product(*var_params.values()))
+    
+    # Generate model names based on the training combinations 
+    model_names = []
+    for c in combinations:
+        model_name = '-'.join(['{:.4}_{}'.format(k,v) for k,v in zip(var_params.keys(),c)])
+        model_name = re.sub(r'[^\w\s-]', '', model_name.lower()) # Remove illegal characters 
+        model_name = re.sub(r'[-\s]+', '-', model_name).strip('-_') # Replace spaces with '_'
+        model_names.append(model_name)
 
-    def __call__(self,activation_mask):
-        """ returns the phosphene simulation (image), given an activation mask"""
-        assert self.grid.shape == activation_mask.shape
-        self.mask = cv2.dilate(activation_mask, self.dilation_kernel, iterations=1)
-        phosphenes = self.grid * self.mask
-        phosphenes = cv2.GaussianBlur(phosphenes,(self.k_size,self.k_size),self.sigma)
-        return phosphenes
+    # return as Pandas DataFrame
+    out = pd.DataFrame(combinations, columns=var_params.keys())
+    out.insert(0,'status','todo')
+    out.insert(0,'model name',model_names)
+    for k,v in fxd_params.items():
+        out[k]=v
+    return out.replace(['None'],[None]).replace([np.nan],[None])
 
-    def create_regular_grid(self, phosphene_resolution, size, jitter, intensity_var):
-        """Returns regular eqiodistant phosphene grid of shape <size> with resolution <phosphene_resolution>
-         for variable phosphene intensity with jitterred positions"""
-        grid = np.zeros(size)
-        phosphene_spacing = np.divide(size,phosphene_resolution)
-        for x in np.linspace(0,size[0],num=phosphene_resolution[0],endpoint=False)+0.5*phosphene_spacing[0] :
-            for y in np.linspace(0,size[1],num=phosphene_resolution[1],endpoint=False)+0.5*phosphene_spacing[0]:
-                deviation = np.multiply(jitter*(2*np.random.rand(2)-1),phosphene_spacing)
-                intensity = intensity_var*(np.random.rand()-0.5)+1
-                rx = np.clip(np.round(x+deviation[0]),0,size[0]-1).astype(int)
-                ry = np.clip(np.round(y+deviation[1]),0,size[1]-1).astype(int)
-                grid[rx,ry]= intensity
-        return grid
-
-class FrameStack(object):
-    def __init__(self, stack_size=4):
-        self.stack_size = stack_size
-        self.stack = []
-        
-    def update_with(self,frame):
-        self.stack.append(frame)
-        if len(self.stack) > self.stack_size:
-            self.stack.pop(0)
-        return self.get()
-
-    def get(self):
-        return torch.cat(self.stack, dim=1)
-
-    def __len__(self):
-        return len(self.stack)
+## Write replay memory to output videos
+def save_replay():
+    out = cv2.VideoWriter(os.path.join(OUT_PATH,'{}.avi'.format(model_name)),
+                          cv2.VideoWriter_fourcc('M','J','P','G'),
+                          2, (IMSIZE,IMSIZE))
+    for i, (state, action, next_state, reward) in enumerate(agent.memory.memory):
+        frame = (255*state[0,-1].detach().cpu().numpy()).astype('uint8')
+        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR )
+        frame = cv2.putText(frame,'reward: {:0.1f}'.format(reward.item()),(0,20),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.35,color=(0,0,255))
+        frame = cv2.putText(frame,'action: {}'.format(action.item()),(0,10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=0.35,color=(0,0,255))
+        out.write(frame)
+    out.release()
