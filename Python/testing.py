@@ -28,7 +28,7 @@ from model import Transition
 
 def test(agent, environment, img_processing, cfg):
 
-    # Counters 
+    # Counters
     wall_collisions = 0
     box_collisions = 0
     endless_loops = 0
@@ -41,10 +41,10 @@ def test(agent, environment, img_processing, cfg):
     _, _, _ = environment.reset(cfg['training_condition'])
 
     # Create an empty frame stack and fill it with frames
-    frame_stack = utils.FrameStack(stack_size=cfg['stack_size'] )
+    frame_stack = imgproc.FrameStack(stack_size=cfg['stack_size'] )
     for _ in range(cfg['stack_size'] ):
         _, _, frame_raw = environment.step(0)
-        frame = img_processing(frame_raw).to(agent.device) 
+        frame = img_processing(frame_raw).to(agent.device)
         state = frame_stack.update_with(frame)
 
     # Episode starts here:
@@ -58,7 +58,7 @@ def test(agent, environment, img_processing, cfg):
             endless_loops +=1
             action = torch.zeros_like(action) # force forward step
             side_steps = 0
-        
+
         end, reward, frame_raw = environment.step(action.item())
         agent_finished = cfg['reset_upon_end_signal'][end]
         frame = img_processing(frame_raw).to(agent.device)
@@ -74,9 +74,9 @@ def test(agent, environment, img_processing, cfg):
         if end == 1:
             box_collisions += 1
         if end == 2:
-            wall_collisions +=1          
-    
-    return {'wall_collisions':wall_collisions, 
+            wall_collisions +=1
+
+    return {'wall_collisions':wall_collisions,
             'box_collisions' :box_collisions,
             'endless_loops' :endless_loops,
             'step_count' :step_count,
