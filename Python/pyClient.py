@@ -2,7 +2,7 @@ import numpy as np
 import socket
 
 class Environment:
-    def __init__(self, ip = "127.0.0.1", port = 13000, size = 128, channels=16):
+    def __init__(self, ip = "127.0.0.1", port = 13000, size = 128, channels=16, *args,**kwargs):
         self.client     = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ip         = ip
         self.port       = port

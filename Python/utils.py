@@ -5,7 +5,7 @@ import itertools
 import re
 import pandas as pd
 import yaml
-
+import os
 
 def load_train_configs(yaml_file):
     """Loads a configuration from yaml file, returns DataFrame with all models and their training parameters"""
@@ -26,25 +26,26 @@ def load_train_configs(yaml_file):
     # Generate model names based on the training combinations
     model_names = []
     for c in combinations:
-        model_name = '-'.join(['{:.4}_{}'.format(k,v) for k,v in zip(var_params.keys(),c)])
+        exp_condition = '-'.join(['{:.4}_{}'.format(k,v) for k,v in zip(var_params.keys(),c)])
+        model_name = '_'.join([fxd_params['NAME'],exp_condition])
         model_name = re.sub(r'[^\w\s-]', '', model_name.lower()) # Remove illegal characters
         model_name = re.sub(r'[-\s]+', '-', model_name).strip('-_') # Replace spaces with '_'
         model_names.append(model_name)
 
     # return as Pandas DataFrame
-    out = pd.DataFrame(combinations, columns=var_params.keys())
+    out = pd.DataFrame(combinations, columns=[k.lower() for k in var_params.keys()])
     out.insert(0,'status','todo')
-    out.insert(0,'model name',model_names)
+    out.insert(0,'model_name',model_names)
     for k,v in fxd_params.items():
-        out[k]=v
-    return out.replace(['None'],[None]).replace([np.nan],[None])
+        out[k.lower()]=v
+    return out.replace(['None'],[None]).replace([np.nan],[None]).set_index('model_name')
 
 ## Write replay memory to output videos
-def save_replay():
-    out = cv2.VideoWriter(os.path.join(OUT_PATH,'{}.avi'.format(model_name)),
+def save_replay(replay_memory, filename, size):
+    out = cv2.VideoWriter(filename,
                           cv2.VideoWriter_fourcc('M','J','P','G'),
-                          2, (IMSIZE,IMSIZE))
-    for i, (state, action, next_state, reward) in enumerate(agent.memory.memory):
+                          2, size)
+    for i, (state, action, next_state, reward) in enumerate(replay_memory):
         frame = (255*state[0,-1].detach().cpu().numpy()).astype('uint8')
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR )
         frame = cv2.putText(frame,'reward: {:0.1f}'.format(reward.item()),(0,20),

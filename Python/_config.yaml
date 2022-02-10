@@ -1,0 +1,54 @@
+Description:
+  NAME: demo
+  DESCR: Test performance at different phosphene resolutions in complex and plain environment
+
+Unity settings: # (not used by python, just here for documentation)
+  FWD_REWARD: 10
+  SIDE_REWARD: -1
+  BOX_REWARD: -20
+  WALL_REWARD: -15
+  TARGET_STEP_REWARD: 250
+  N_TARGET_STEPS: 200
+  LIGHT_INTENSITY: 1.0
+
+Train settings:
+  SAVEDIR: '.\Demo\TrainingDemo'
+  DEVICE: 'cpu' # cuda:0
+  OPTIMIZER: adam
+  LR_DQN: 0.01
+  BATCH_SIZE: 128 # original 128
+  VALIDATE_EVERY: 3 #50 # episodes
+  MAX_EPISODES: 10 #1200 # (stops when either one of these are reached)
+  MAX_STEPS: 1.0e+7 # (stops when either one of these are reached)
+  REWARD_MULTIPLIER: 1. # To
+
+  # Events that trigger reset of the environment
+  RESET_END_IS_0: False # Nothing happened
+  RESET_END_IS_1: True # Box collision
+  RESET_END_IS_2: False # Wall collision
+  RESET_END_IS_3: True # Reached step target
+  RESET_AFTER_NR_SIDESTEPS: 5
+
+Environment:
+  IMSIZE: 128
+  STACK_SIZE: 4
+  N_ACTIONS: 3
+  IP: "127.0.0.1"   # Ip address that the TCP/IP interface listens to
+  PORT: 13000       # Port number that the TCP/IP interface listens to
+  COMPLEXITY: plain #['plain', 'complex']
+
+Agent:
+  SEED: [0, 1] #[0,1,2,3,4,None] # Random seed initialization
+  GAMMA: 0.9
+  EPS_START: 0.95
+  EPS_END: 0.05
+  EPS_DECAY_steps: 4000
+  REPLAY_START_SIZE:  1500
+  TARGET_UPDATE: 10 #episodes
+  MEMORY_CAPACITY: 12000
+
+Image processing:
+  MODE: edge_detection
+  PHOSPHENE_RESOLUTION: 42 #[42, 18]
+  EDGE_THRESHOLD:
+  DEPTH_THRESH

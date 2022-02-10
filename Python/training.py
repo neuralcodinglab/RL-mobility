@@ -16,6 +16,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 from torchsummary import summary
+import argparse
 
 import cv2
 
@@ -131,18 +132,18 @@ def train(agent, environment, img_processing, optimizer, cfg):
     endless_loops = 0
     total_loss = 0
     step_count = 0
-    best_reward = 0
+    best_reward = np.NINF
 
     for episode in range(cfg['max_episodes']):
 
         # Valdation loop
-        if episode % 50 == 0:
+        if episode % cfg['validate_every'] == 0:
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
 
             # Save best model
             if val_reward > best_reward:
-                print("new best model")
+                print("model improved! Saving to {}".format(cfg['model_path']))
                 best_reward = val_reward
                 torch.save(agent.policy_net.state_dict(), cfg['model_path'])
 
@@ -199,7 +200,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
             action = agent.select_action(state)
             side_steps = side_steps + 1  if action != 0 else 0
             end, reward, frame_raw = environment.step(action.item())
-            agent_died = cfg['reset_upon_end_signal'][end] or side_steps > cfg['reset_after_nr_sidesteps']
+            agent_died = cfg['reset_end_is_{}'.format(end)] or side_steps > cfg['reset_after_nr_sidesteps']
             frame = img_processing(frame_raw).to(agent.device)
             next_state = frame_stack.update_with(frame) if not agent_died else None
 
@@ -253,82 +254,60 @@ def train(agent, environment, img_processing, optimizer, cfg):
                 break
             else:
                 state = next_state
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", type=str, default="_config.yaml",
+                    help="Specify filename of config file (yaml) with the train settings")
+    args = parser.parse_args()
+
+    # Load train configurations from specified yaml file
+    configs = utils.load_train_configs(args.config)
+
+    environment = None
+    for _ , cfg in configs.iterrows():
+        current_model = cfg.name
+
+        # Train settings are stored in cfg (Series)
+        cfg['training_condition']       = 0 if cfg['complexity'] == 'plain' else 1 # 0: plain training, 1: complex training, 2: plain testing 3: complex testing
+        cfg['model_path']               = os.path.join(cfg['savedir'],'.pth'.format(current_model)) # Save path for model
+        cfg['logfile']                  = os.path.join(cfg['savedir'],'train_stats.csv') # To save the training stats
+        cfg['status_file']             = os.path.join(cfg['savedir'],'_status.csv')
+        if not os.path.isdir(cfg['savedir']):
+            os.makedirs(cfg['savedir'])
+
+        # Initialize model components
+        torch.manual_seed(cfg['seed'])
+        agent = model.DoubleDQNAgent(**cfg)
+        environment =  pyClient.Environment(**cfg) if environment is None else environment
+        img_processing = imgproc.ImageProcessor(**cfg)
+        optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
+
+        # Write status to csvfile
+        if os.path.exists(cfg['status_file']):
+            status = pd.read_csv(cfg['status_file']).set_index('model_name')
+        else:
+            status = configs.copy()
+        if status.loc[current_model, 'status'] == 'finished':
+            print('skipping.. already finished in previous training: {}'.format(current_model))
+            continue
+        status.loc[current_model, 'status'] = 'training'
+        status.to_csv(cfg['status_file'])
+        print(status)
+
+        # # Training
+        assert environment.client is not None, "Error: could not connect to env. Make sure to start Unity server first!"
+        print(current_model)
+        train(agent, environment, img_processing, optimizer, cfg)
+
+        # Write status to training file
+        status.loc[current_model, 'status'] = 'finished'
+        status.to_csv(cfg['status_file'])
+        print('finished training')
+
+        # write replay memory to video
+        videopath = os.path.join(cfg['savedir'],'{}.avi'.format(current_model))
+        utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
+
 
 if __name__ == "__main__":
-    ### TODO: ARGPARSER ###
-
-    ## Environment
-    IMSIZE = 128
-    STACK_SIZE = 4
-    N_ACTIONS = 3
-    IP  = "127.0.0.1" # Ip address that the TCP/IP interface listens to
-    PORT = 13000       # Port number that the TCP/IP interface listens to
-    environment =  pyClient.Environment(ip = IP, port = PORT, size = IMSIZE) # or choose # DummyEnvironment()
-
-    ## Image processing
-    PHOSPHENE_RESOLUTION = 50
-    img_processing = imgproc.ImageProcessor(phosphene_resolution = PHOSPHENE_RESOLUTION)
-
-    ## DQN Agent
-    BATCH_SIZE = 128 #original 128
-    GAMMA = 0.5
-    EPS_START = 0.95
-    EPS_END = 0.05
-    EPS_DECAY_steps = 4000
-    EPS_DECAY = (EPS_START - EPS_END)/EPS_DECAY_steps
-    REPLAY_START_SIZE =  1500
-    TARGET_UPDATE = 10 #episodes
-    DEVICE = 'cpu'
-    MEMORY_CAPACITY = 12000
-    agent = model.DoubleDQNAgent(imsize=IMSIZE,
-                     in_channels=STACK_SIZE,
-                     n_actions=N_ACTIONS,
-                     memory_capacity=MEMORY_CAPACITY,
-                     eps_start=EPS_START,
-                     eps_end=EPS_END,
-                     eps_delta=EPS_DECAY,
-                     gamma_discount = GAMMA,
-                     batch_size = BATCH_SIZE,
-                     device=DEVICE)
-
-    ## Optimizer
-    LR_DQN = 0.01
-    optimizer = optim.Adam(agent.policy_net.parameters(), lr = LR_DQN)
-
-    ## Training parameters
-    OUT_PATH = './DemoTraining'
-    MODEL_PATH = os.path.join(OUT_PATH,'demo.pth')
-    LOGFILE = os.path.join(OUT_PATH,'train_stats.csv')
-    SEED = 0
-    TRAINING_CONDITION = 0
-    MAX_EPISODES = 1000 # number of episodes (an episode ends after agent hits a box)
-    MAX_STEPS  = 1e6 # number of optimization steps (each time step the model parameters are updated)
-    RESET_AFTER_NR_SIDESTEPS = 5
-    RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
-                             1:True,   # Box collision
-                             2:False,   # Wall collision
-                             3:True}  # Reached step target
-    REWARD_MULTIPLIER        = 1.
-
-
-
-    ## Start training
-    cfg = dict()
-    cfg['model_path']               = MODEL_PATH # Save path for model
-    cfg['logfile']                  = LOGFILE # To save the optimizaiton stats
-    cfg['seed']                     = SEED # for reproducability of random factors
-    cfg['training_condition']       = TRAINING_CONDITION # 0: plain training, 1: complex training, 2: plain testing 3: complex testing
-    cfg['max_episodes']             = MAX_EPISODES
-    cfg['max_steps']                = MAX_STEPS # Training stops after either max episodes is reached, or max optimization steps
-    cfg['stack_size']               = STACK_SIZE # For frame stacking
-    cfg['target_update']            = TARGET_UPDATE #Number of episodes after which DQN target net is updated
-    cfg['reset_after_nr_sidesteps'] = RESET_AFTER_NR_SIDESTEPS # Training is stopped when model keeps side stepping (i.e. it stops reveicing positive rewards)
-    cfg['reset_upon_end_signal']    = RESET_UPON_END_SIGNAL # Decide whether to consider different end signals as final state (i.e. box collision, wall collision, step target reached)
-    cfg['replay_start_size']        = REPLAY_START_SIZE # Start optimizing when replay memory contains this number of transitions
-    cfg['reward_multiplier']        = REWARD_MULTIPLIER # Multiplies the reward signal with this value
-    print('training...')
-    if not os.path.isdir(OUT_PATH):
-        os.makedirs(OUT_PATH)
-    train(agent, environment, img_processing, optimizer, cfg)
-    print('finished training')
-    utils.save_replay()
+    main()

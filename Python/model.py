@@ -17,16 +17,16 @@ class DQN(nn.Module):
 
         # Fully connected output layer
         imsize = imsize if type(imsize) is tuple else (imsize,imsize)
-        n_hidden = ((imsize[0]-21)//8)*((imsize[1]-21)//8) * 32 
+        n_hidden = ((imsize[0]-21)//8)*((imsize[1]-21)//8) * 32
         self.head = nn.Linear(n_hidden, out_channels)
 
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.flatten(start_dim=1))    
-    
-    
+        return self.head(x.flatten(start_dim=1))
+
+
 #replay memory
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -50,8 +50,8 @@ class ReplayMemory(object):
 
     def __len__(self):
         return len(self.memory)
-    
-    
+
+
 class DoubleDQNAgent():
     def __init__(self,
                  imsize=128,
@@ -63,35 +63,36 @@ class DoubleDQNAgent():
                  eps_delta=(0.95-0.05)/4000,
                  gamma_discount = 0.999,
                  batch_size = 128,
-                 device='cpu'):
-        
+                 device='cpu',
+                 *args,**kwargs):
+
         # DQNs
         self.imsize      = imsize
         self.in_channels = in_channels
         self.n_actions   = n_actions
         self.device      = torch.device(device)
-        
+
         self.policy_net = DQN(imsize, in_channels, n_actions).to(device)
         self.target_net = DQN(imsize, in_channels, n_actions).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
-        
-        # Replay memory 
+
+        # Replay memory
         self.memory = ReplayMemory(memory_capacity)
-        
+
         # Epsilon decay
         self.eps_start  = eps_start
         self.eps_end    = eps_end
         self.eps_delta  = eps_delta
         self.step_count = 0
-        
+
         # Gamma discount for future rewards
         self.gamma_discount = gamma_discount
         self.batch_size     = batch_size
-    
+
     def update_target_net(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        
+
     def select_action(self,state, validation=False):
         sample = torch.rand(1) if not validation else 1
         self.eps_threshold = max(self.eps_end, (self.eps_start-(self.eps_delta*self.step_count)))
@@ -101,7 +102,7 @@ class DoubleDQNAgent():
                 return self.policy_net(state).argmax(1)
         else:
             return torch.randint(self.n_actions,(1,),device=self.device)
-        
+
     def forward(self):
         """implementation from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html"""
         if len(self.memory) < self.batch_size:
@@ -136,5 +137,5 @@ class DoubleDQNAgent():
         next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma_discount) + reward_batch
-        
-        return state_action_values, expected_state_action_values 
+
+        return state_action_values, expected_state_action_values

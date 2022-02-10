@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class FrameStack(object):
-    def __init__(self, stack_size=4):
+    def __init__(self, stack_size=4, *args,**kwargs):
         self.stack_size = stack_size
         self.stack = []
 
@@ -24,7 +24,7 @@ class FrameStack(object):
         return len(self.stack)
 
 class ImageProcessor(object):
-    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge_detection', canny_threshold=70, ):
+    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge_detection', canny_threshold=70, *args,**kwargs):
         """ @TODO
         - Extended image processing
         """
@@ -49,7 +49,7 @@ class ImageProcessor(object):
         return torch.Tensor(frame / 255.).view(1,1,self.imsize, self.imsize)
 
 class PhospheneSimulator(object):
-    def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.9, aperture=.66, sigma=0.8, custom_grid=None):
+    def __init__(self,phosphene_resolution=(50,50), size=(480,480),  jitter=0.35, intensity_var=0.9, aperture=.66, sigma=0.8, custom_grid=None, *args,**kwargs):
         """Phosphene simulator class to create gaussian-based phosphene simulations from activation mask
         on __init__, provide custom phosphene grid or use the grid parameters to create one
         - aperture: receptive field of each phosphene (uses dilation of the activation mask to achieve this)
