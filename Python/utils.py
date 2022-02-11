@@ -12,7 +12,7 @@ def load_train_configs(yaml_file):
 
     # Load yaml file as dictionary
     with open(yaml_file) as file:
-        raw_content = yaml.load(file) # nested dictionary
+        raw_content = yaml.load(file,Loader=yaml.FullLoader) # nested dictionary
         unpacked = {k:v for params in raw_content.values() for k,v in params.items()}
         assert not any(isinstance(v,dict) for v in unpacked.values()), "Only single-valued parameters or lists of single-valued parameters are accepted"
 

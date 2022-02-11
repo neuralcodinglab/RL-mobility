@@ -269,10 +269,11 @@ def main():
 
         # Train settings are stored in cfg (Series)
         cfg['training_condition']       = 0 if cfg['complexity'] == 'plain' else 1 # 0: plain training, 1: complex training, 2: plain testing 3: complex testing
-        cfg['model_path']               = os.path.join(cfg['savedir'],'.pth'.format(current_model)) # Save path for model
+        cfg['model_path']               = os.path.join(cfg['savedir'],'{}.pth'.format(current_model)) # Save path for model
         cfg['logfile']                  = os.path.join(cfg['savedir'],'train_stats.csv') # To save the training stats
         cfg['status_file']             = os.path.join(cfg['savedir'],'_status.csv')
         if not os.path.isdir(cfg['savedir']):
+            print('creating directory: {}'. format(cfg['savedir']))
             os.makedirs(cfg['savedir'])
 
         # Initialize model components
