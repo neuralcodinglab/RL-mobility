@@ -24,7 +24,7 @@ class FrameStack(object):
         return len(self.stack)
 
 class ImageProcessor(object):
-    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge_detection', canny_threshold=70, *args,**kwargs):
+    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge-detection', canny_threshold=70, *args,**kwargs):
         """ @TODO
         - Extended image processing
         """
@@ -39,11 +39,16 @@ class ImageProcessor(object):
             self.simulator = None
 
     def __call__(self,state,):
-        if self.mode == 'edge_detection':
+        if self.mode == 'edge-detection' :
             frame = state['colors'] # RGB input
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        if self.simulator is not None:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.Canny(frame, self.thr_low,self.thr_high)
+        elif self.mode == 'camera-vision' :
+            frame = state['colors'] # RGB input
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        elif self.mode == 'no-vision':
+            return torch.rand(1,1,self.imsize, self.imsize)
+        if self.simulator is not None:
             frame = self.simulator(frame)
         frame = frame.astype('float32')
         return torch.Tensor(frame / 255.).view(1,1,self.imsize, self.imsize)
