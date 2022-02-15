@@ -38,7 +38,6 @@ from model import Transition
 
 
 
-
 def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,253,254,255]):
     # How to handle the different end signals
     RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
@@ -254,61 +253,76 @@ def train(agent, environment, img_processing, optimizer, cfg):
                 break
             else:
                 state = next_state
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", type=str, default="_config.yaml",
-                    help="Specify filename of config file (yaml) with the train settings")
-    args = parser.parse_args()
 
-    # Load train configurations from specified yaml file
-    configs = utils.load_train_configs(args.config)
+def main(config_file=None):
+    """  Runs the train loop multiple times, as specified in the yaml file with the training configuration """
 
-    environment = None
-    for _ , cfg in configs.iterrows():
+    # Load train configurations (pandas DataFrame) from specified yaml file
+    train_configs = utils.load_train_configs(config_file)
+    assert train_configs is not None, "Please run python training.py -c <filename> to specify yaml file with the training configuration"
+
+    # Create directory, or continue from previous training session.
+    # Train configurations are copied to a status file in the save directory
+    assert train_configs.savedir.nunique() == 1
+    savedir = train_configs.savedir[0]
+    status_file  = os.path.join(savedir,'_status.csv')
+    if not os.path.isdir(savedir):
+        print('creating directory: {}'. format(savedir))
+        os.makedirs(savedir)
+        status = train_configs.copy()
+    else:
+        print("Resuming previous training session")
+        status = pd.read_csv(status_file).set_index('model_name').fillna(np.nan).replace([np.nan], [None])
+        if not all(train_configs.index.isin(status.index)):
+            new = train_configs[~train_configs.index.isin(status.index)]
+            status = pd.concat([status, new])
+            print("adding new models to the list: \n{}".format('\n'.join(new.index.tolist())))
+
+
+    # Run a training loop for each specified model (i.e. each row in the train_configs / status file)
+    environment_connected = False
+    for _ , cfg in status.iterrows():
         current_model = cfg.name
 
-        # Train settings are stored in cfg (Series)
-        cfg['training_condition']       = 0 if cfg['complexity'] == 'plain' else 1 # 0: plain training, 1: complex training, 2: plain testing 3: complex testing
-        cfg['model_path']               = os.path.join(cfg['savedir'],'{}.pth'.format(current_model)) # Save path for model
-        cfg['logfile']                  = os.path.join(cfg['savedir'],'train_stats.csv') # To save the training stats
-        cfg['status_file']             = os.path.join(cfg['savedir'],'_status.csv')
-        if not os.path.isdir(cfg['savedir']):
-            print('creating directory: {}'. format(cfg['savedir']))
-            os.makedirs(cfg['savedir'])
-
-        # Initialize model components
-        torch.manual_seed(cfg['seed'])
-        agent = model.DoubleDQNAgent(**cfg)
-        environment =  pyClient.Environment(**cfg) if environment is None else environment
-        img_processing = imgproc.ImageProcessor(**cfg)
-        optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
+        # Additional training settings (inferred from specified settings)
+        cfg['training_condition'] = {'plain': 0, 'complex': 1}[cfg['complexity']]
+        cfg['model_path']         = os.path.join(savedir,'{}.pth'.format(current_model)) # Save path for model
+        cfg['logfile']            = os.path.join(savedir,'{}_train_stats.csv'.format(current_model)) # To save the training stats
 
         # Write status to csvfile
-        if os.path.exists(cfg['status_file']):
-            status = pd.read_csv(cfg['status_file']).set_index('model_name')
-        else:
-            status = configs.copy()
         if status.loc[current_model, 'status'] == 'finished':
             print('skipping.. already finished in previous training: {}'.format(current_model))
             continue
         status.loc[current_model, 'status'] = 'training'
-        status.to_csv(cfg['status_file'])
+        status.to_csv(status_file)
         print(status)
+
+        # Initialize model components
+        torch.manual_seed(cfg['seed'])
+        agent = model.DoubleDQNAgent(**cfg)
+        img_processing = imgproc.ImageProcessor(**cfg)
+        optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
+        environment =  pyClient.Environment(**cfg) if not environment_connected else environment # Only initialized on first run
 
         # # Training
         assert environment.client is not None, "Error: could not connect to env. Make sure to start Unity server first!"
+        environment_connected = True
         print(current_model)
         train(agent, environment, img_processing, optimizer, cfg)
 
         # Write status to training file
         status.loc[current_model, 'status'] = 'finished'
-        status.to_csv(cfg['status_file'])
+        status.to_csv(status_file)
         print('finished training')
 
         # write replay memory to video
-        videopath = os.path.join(cfg['savedir'],'{}.avi'.format(current_model))
+        videopath = os.path.join(savedir,'{}.avi'.format(current_model))
         utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", type=str, default="_config.yaml",
+                    help="Specify filename of config file (yaml) with the train settings")
+    args = parser.parse_args()
+    main(args.config)

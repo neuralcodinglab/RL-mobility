@@ -33,7 +33,7 @@ class ImageProcessor(object):
         self.thr_low  = canny_threshold // 2
         self.imsize = imsize
         if phosphene_resolution is not None:
-            self.simulator = PhospheneSimulator(phosphene_resolution=(phosphene_resolution,phosphene_resolution),size=(128,128),
+            self.simulator = PhospheneSimulator(phosphene_resolution=(phosphene_resolution,phosphene_resolution),size=(imsize,imsize),
                                                      jitter=0.25,intensity_var=0.9,aperture=.66,sigma=0.60,)
         else:
             self.simulator = None
