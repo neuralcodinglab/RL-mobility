@@ -27,6 +27,10 @@ import model
 from model import Transition
 import imgproc
 
+ENDPOINTS = ['wall_collisions','box_collisions','endless_loops',
+             'step_count','cumulative_reward']
+
+
 def test(agent, environment, img_processing, cfg):
 
     # Counters
