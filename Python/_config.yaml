@@ -48,7 +48,7 @@ Agent:
   MEMORY_CAPACITY: 12000
 
 Image processing:
-  MODE: edge_detection # Other modes not implemented yet
+  MODE: edge-detection # e.g. choose from ['edge-detection', 'camera-vision', 'no-vision']. Other modes not implemented yet
   PHOSPHENE_RESOLUTION: 42 #[42, 18]
   EDGE_THRESHOLD: #leave empty for default values
   DEPTH_THRESH:
