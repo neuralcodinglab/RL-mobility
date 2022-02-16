@@ -35,9 +35,6 @@ import model
 import imgproc
 from model import Transition
 
-
-
-
 def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,253,254,255]):
     # How to handle the different end signals
     RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
@@ -254,34 +251,47 @@ def train(agent, environment, img_processing, optimizer, cfg):
             else:
                 state = next_state
 
-def main(config_file=None):
-    """  Runs the train loop multiple times, as specified in the yaml file with the training configuration """
+def main(config_file=None, specs_file=None):
+    """ Either config_file (yaml) with configurations or specs_file (csv) with a
+    list of models and specifications must be specified.  This script calls the
+    train loop once for each of the specified models /configurations.
 
-    # Load train configurations (pandas DataFrame) from specified yaml file
-    train_configs = utils.load_train_configs(config_file)
-    assert train_configs is not None, "Please run python training.py -c <filename> to specify yaml file with the training configuration"
+    Usage:
+    run python training.py -c <filename> to specify yaml file with the training configuration"
+    run python training.py -s <filename> to specify csv file with list of model specifications"
+    """
 
-    # Create directory, or continue from previous training session.
-    # Train configurations are copied to a status file in the save directory
-    assert train_configs.savedir.nunique() == 1
-    savedir = train_configs.savedir[0]
-    status_file  = os.path.join(savedir,'_status.csv')
-    if not os.path.isdir(savedir):
-        print('creating directory: {}'. format(savedir))
-        os.makedirs(savedir)
-        status = train_configs.copy()
+    if config_file is not None:
+        # Create train_specs (pandas DataFrame) from specified configurations (yaml file)
+        print("creating specs list from configuration file..")
+        train_specs = utils.load_train_configs(config_file)
+
+        # Create directory, or continue from previous training session.
+        # train_specs (DataFrame) are written to a csv file in the save directory
+        assert train_specs.savedir.nunique() == 1
+        savedir = train_specs.savedir[0]
+        specs_file  = os.path.join(savedir,'_specs.csv')
+        if not os.path.isdir(savedir):
+            print('creating directory: {}'. format(savedir))
+            os.makedirs(savedir)
+        else:
+            print("Found existing directory. resuming previous training session..")
+            assert os.path.exists(specs_file), "Cannot resume training session: no specs file was found. Please specify new directory."
+            existing_specs = pd.read_csv(specs_file).set_index('model_name').fillna(np.nan).replace([np.nan], [None])
+            if not all(train_specs.index.isin(existing_specs.index)):
+                new_specs = train_configs[~train_specs.index.isin(existing_specs.index)]
+                train_specs = pd.concat([existing_specs, new_specs])
+                print("adding new models to the specs list: \n{}".format('\n'.join(new.index.tolist())))
+
     else:
-        print("Resuming previous training session")
-        status = pd.read_csv(status_file).set_index('model_name').fillna(np.nan).replace([np.nan], [None])
-        if not all(train_configs.index.isin(status.index)):
-            new = train_configs[~train_configs.index.isin(status.index)]
-            status = pd.concat([status, new])
-            print("adding new models to the list: \n{}".format('\n'.join(new.index.tolist())))
+        # Load training specficiations from the provided specs list
+        train_specs = pd.read_csv(specs_file).set_index('model_name').fillna(np.nan).replace([np.nan], [None])
+        savedir = train_specs.savedir[0]
+        print("resuming previous training session..")
 
-
-    # Run a training loop for each specified model (i.e. each row in the train_configs / status file)
+    # Run a training loop for each specified model (i.e. each row in the train_configs / specs_file)
     environment_connected = False
-    for _ , cfg in status.iterrows():
+    for _ , cfg in train_specs.iterrows():
         current_model = cfg.name
 
         # Additional training settings (inferred from specified settings)
@@ -289,13 +299,13 @@ def main(config_file=None):
         cfg['model_path']         = os.path.join(savedir,'{}.pth'.format(current_model)) # Save path for model
         cfg['logfile']            = os.path.join(savedir,'{}_train_stats.csv'.format(current_model)) # To save the training stats
 
-        # Write status to csvfile
-        if status.loc[current_model, 'status'] == 'finished':
+        # Write train_specs to csvfile
+        if train_specs.loc[current_model, 'status'] == 'finished':
             print('skipping.. already finished in previous training: {}'.format(current_model))
             continue
-        status.loc[current_model, 'status'] = 'training'
-        status.to_csv(status_file)
-        print(status)
+        train_specs.loc[current_model, 'status'] = 'training'
+        train_specs.to_csv(specs_file)
+        print(train_specs)
 
         # Initialize model components
         torch.manual_seed(cfg['seed'])
@@ -307,12 +317,11 @@ def main(config_file=None):
         # # Training
         assert environment.client is not None, "Error: could not connect to env. Make sure to start Unity server first!"
         environment_connected = True
-        print(current_model)
         train(agent, environment, img_processing, optimizer, cfg)
 
-        # Write status to training file
-        status.loc[current_model, 'status'] = 'finished'
-        status.to_csv(status_file)
+        # Write specs to training file
+        train_specs.loc[current_model, 'status'] = 'finished'
+        train_specs.to_csv(specs_file)
         print('finished training')
 
         # write replay memory to video
@@ -322,7 +331,10 @@ def main(config_file=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", type=str, default="_config.yaml",
-                    help="Specify filename of config file (yaml) with the train settings")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-c", "--config", type=str, default=None,
+                    help="filename of config file (yaml) with the training configurations: e.g. '_config.yaml' ")
+    group.add_argument("-s", "--specs", type=str, default=None,
+                        help="filename of specs file (csv) with the list of model specifications")
     args = parser.parse_args()
-    main(args.config)
+    main(args.config, args.specs)

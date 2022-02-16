@@ -48,6 +48,8 @@ class ImageProcessor(object):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         elif self.mode == 'no-vision':
             return torch.rand(1,1,self.imsize, self.imsize)
+        else:
+            raise NotImplementedError("\n\n'{}' is not recognized as valid image processing method. Try e.g. ('edge-detection' | 'camera-vision')".format(self.mode))
         if self.simulator is not None:
             frame = self.simulator(frame)
         frame = frame.astype('float32')
