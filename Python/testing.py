@@ -61,7 +61,7 @@ def test(agent, environment, img_processing, cfg):
             side_steps = 0
 
         end, reward, frame_raw = environment.step(action.item())
-        agent_finished = cfg['reset_end_is_{}'.format(end)] 
+        agent_finished = cfg['reset_end_is_{}'.format(end)]
         frame = img_processing(frame_raw).to(agent.device)
         state = frame_stack.update_with(frame) if not agent_finished else None
 
@@ -82,3 +82,6 @@ def test(agent, environment, img_processing, cfg):
             'endless_loops' :endless_loops,
             'step_count' :step_count,
             'cumulative_reward' :cumulative_reward}
+
+
+# TODO add argparser and main script (to test list of models at once) 
