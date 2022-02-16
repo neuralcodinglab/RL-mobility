@@ -36,11 +36,12 @@ import imgproc
 from model import Transition
 
 def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,253,254,255]):
-    # How to handle the different end signals
-    RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
-                             1:False,   # Box collision
-                             2:False,   # Wall collision
-                             3:True}    # Reached step target
+    # # How to handle the different end signals
+    # 16 feb 2021 previously:
+    # RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
+    #                          1:False,   # Box collision
+    #                          2:False,   # Wall collision
+    #                          3:True}    # Reached step target
 
     # Set nn.module to evaluation mode
     agent.policy_net.eval()
@@ -97,7 +98,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
                 endless_loops += 1
                 step_count += t
                 break
-            elif RESET_UPON_END_SIGNAL[end]:
+            elif cfg['reset_end_is_{}'.format(end)]:
                 step_count += t
                 break
             else:
