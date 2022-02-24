@@ -167,7 +167,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
 
         # Stop training after (either maximum number of steps or maximum number of episodes)
-        if agent.step_count > cfg['max_steps']:
+        if agent.step_count * cfg['optimizations_per_step'] > cfg['max_optim_steps']:
             break
 
 
@@ -216,21 +216,22 @@ def train(agent, environment, img_processing, optimizer, cfg):
             agent.policy_net.train()
             if len(agent.memory) > cfg['replay_start_size']:
 
-                state_action_values, expected_state_action_values = agent.forward()
+                for _ in range(cfg['optimizations_per_step']):
+                    state_action_values, expected_state_action_values = agent.forward()
 
-                # Compute Huber loss
-                loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
-                total_loss += loss.item()
+                    # Compute Huber loss
+                    loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
+                    total_loss += loss.item()
 
-                # Optimize the model
-                optimizer.zero_grad()
-                loss.backward()
+                    # Optimize the model
+                    optimizer.zero_grad()
+                    loss.backward()
 
-                # Gradient clipping
-                nn.utils.clip_grad_norm_(agent.policy_net.parameters(), 1)
+                    # Gradient clipping
+                    nn.utils.clip_grad_norm_(agent.policy_net.parameters(), 1)
 
-                # Update the model parameters
-                optimizer.step()
+                    # Update the model parameters
+                    optimizer.step()
 
             else:
                 # Do not count as optimization loop
