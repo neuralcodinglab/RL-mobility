@@ -19,7 +19,8 @@ Train settings:
   BATCH_SIZE: 128 # original 128
   VALIDATE_EVERY: 50 # episodes
   MAX_EPISODES: 1200 # (stops when either one of these are reached)
-  MAX_STEPS: 1.0e+7 # (stops when either one of these are reached)
+  MAX_OPTIM_STEPS: 1.0e+7 # (stops when either one of these are reached)
+  OPTIMIZATIONS_PER_STEP: 10
   REWARD_MULTIPLIER: 1. # To
 
   # Events that trigger reset of the environment
