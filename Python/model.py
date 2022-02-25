@@ -60,7 +60,7 @@ class DoubleDQNAgent():
                  memory_capacity=12000,
                  eps_start=0.95,
                  eps_end=0.05,
-                 eps_delta=(0.95-0.05)/4000,
+                 eps_delta=(0.05-0.95)/4000,
                  gamma_discount = 0.999,
                  batch_size = 128,
                  device='cpu',
@@ -95,7 +95,7 @@ class DoubleDQNAgent():
 
     def select_action(self,state, validation=False):
         sample = torch.rand(1) if not validation else 1
-        self.eps_threshold = max(self.eps_end, (self.eps_start-(self.eps_delta*self.step_count)))
+        self.eps_threshold = max(self.eps_end, (self.eps_start+(self.eps_delta*self.step_count)))
         self.step_count += 1
         if sample > self.eps_threshold:
             with torch.no_grad():

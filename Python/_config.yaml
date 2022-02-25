@@ -43,7 +43,7 @@ Agent:
   GAMMA: 0.9
   EPS_START: 0.95
   EPS_END: 0.05
-  EPS_DECAY_steps: 4000
+  EPS_DELTA: -1.125e-4 # for a 4000-steps decay:  (0.05-0.95)/4000 = -1.125e-4
   REPLAY_START_SIZE:  1500
   TARGET_UPDATE: 10 #episodes
   MEMORY_CAPACITY: 12000
