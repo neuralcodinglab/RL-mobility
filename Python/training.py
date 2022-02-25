@@ -98,7 +98,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
                 endless_loops += 1
                 step_count += t
                 break
-            elif cfg['reset_end_is_{}'.format(end)]:
+            elif end == 3: # Reached step target. Was: elif cfg['reset_end_is_{}'.format(end))
                 step_count += t
                 break
             else:
