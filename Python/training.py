@@ -281,7 +281,7 @@ def main(config_file=None, specs_file=None):
             assert os.path.exists(specs_file), "Cannot resume training session: no specs file was found. Please specify new directory."
             existing_specs = pd.read_csv(specs_file).set_index('model_name').fillna(np.nan).replace([np.nan], [None])
             if not all(train_specs.index.isin(existing_specs.index)):
-                new_specs = train_configs[~train_specs.index.isin(existing_specs.index)]
+                new_specs = train_specs[~train_specs.index.isin(existing_specs.index)]
                 train_specs = pd.concat([existing_specs, new_specs])
                 print("adding new models to the specs list: \n{}".format('\n'.join(new.index.tolist())))
 
