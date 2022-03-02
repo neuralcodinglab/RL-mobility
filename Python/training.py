@@ -104,7 +104,6 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             else:
                 state = next_state
 
-    print('step count {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(step_count, wall_collisions, box_collisions, endless_loops, total_reward))
     return step_count, wall_collisions, box_collisions, endless_loops, total_reward
 
 
@@ -139,6 +138,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         if episode % cfg['validate_every'] == 0:
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
+            print('episode {}, step count: {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(episode,*val_performance))
 
             # Save best model
             if val_reward > best_reward:
@@ -175,7 +175,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
         # Target net is updated once in a few steps (double Q-learning)
         if optimizer.optimization_count / cfg['target_update'] >= target_net_update_count:  #steps
-            print('episode {}, target net updated'.format(episode))
+            print('Target net updated!')
             agent.update_target_net()
             target_net_update_count += 1
 
