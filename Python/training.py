@@ -130,6 +130,8 @@ def train(agent, environment, img_processing, optimizer, cfg):
     total_loss = 0
     step_count = 0
     best_reward = np.NINF
+    optimizer.optimization_count = 0
+    target_net_update_count = 0
 
     for episode in range(cfg['max_episodes']):
 
@@ -167,14 +169,15 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
 
         # Stop training after (either maximum number of steps or maximum number of episodes)
-        if agent.step_count * cfg['optimizations_per_step'] > cfg['max_optim_steps']:
+        if optimizer.optimization_count > cfg['max_optim_steps']:
             break
 
 
-        # Target net is updated once in a few episodes (double Q-learning)
-        if episode % cfg['target_update']  == 0:  #episodes
+        # Target net is updated once in a few steps (double Q-learning)
+        if optimizer.optimization_count / cfg['target_update'] >= target_net_update_count:  #steps
             print('episode {}, target net updated'.format(episode))
             agent.update_target_net()
+            target_net_update_count += 1
 
 
         # Reset environment at start of episode
@@ -232,9 +235,10 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
                     # Update the model parameters
                     optimizer.step()
+                    optimizer.optimization_count += 1
 
             else:
-                # Do not count as optimization loop
+                # Do not count steps, as optimization has not started yet (delay epsilon decay)
                 agent.step_count = 0
 
             # 5. Store performance and training measures
