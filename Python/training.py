@@ -129,13 +129,19 @@ def train(agent, environment, img_processing, optimizer, cfg):
     total_loss = 0
     step_count = 0
     best_reward = np.NINF
+    best_tr_reward = np.NINF
     optimizer.optimization_count = 0
     target_net_update_count = 0
 
     for episode in range(cfg['max_episodes']):
 
         # Valdation loop
-        if episode % cfg['validate_every'] == 0:
+        if episode_reward > best_tr_reward:
+            best_tr_reward = episode_reward
+            best_episode_so_far = True
+
+        if (episode % cfg['validate_every'] == 0) or best_episode_so_far:
+            best_episode_so_far = False
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
             print('episode {}, step count: {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(episode,*val_performance))
