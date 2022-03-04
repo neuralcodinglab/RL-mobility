@@ -94,9 +94,12 @@ class DoubleDQNAgent():
         self.target_net.load_state_dict(self.policy_net.state_dict())
 
     def select_action(self,state, validation=False):
-        sample = torch.rand(1) if not validation else 1
+        if not validation:
+            sample = torch.rand(1)
+            self.step_count += 1
+        else:
+            sample = 1
         self.eps_threshold = max(self.eps_end, (self.eps_start+(self.eps_delta*self.step_count)))
-        self.step_count += 1
         if sample > self.eps_threshold:
             with torch.no_grad():
                 return self.policy_net(state).argmax(1)
