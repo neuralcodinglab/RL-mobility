@@ -294,6 +294,9 @@ def main(config_file=None, specs_file=None):
                 new_specs = train_specs[~train_specs.index.isin(existing_specs.index)]
                 train_specs = pd.concat([existing_specs, new_specs])
                 print("adding new models to the specs list: \n{}".format('\n'.join(new_specs.index.tolist())))
+            else:
+                train_specs = existing_specs
+                print("Using the already existing specs list (instead of the provided config file)")
 
     else:
         # Load training specficiations from the provided specs list
