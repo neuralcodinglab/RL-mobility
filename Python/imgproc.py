@@ -24,13 +24,13 @@ class FrameStack(object):
         return len(self.stack)
 
 class ImageProcessor(object):
-    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge-detection', canny_threshold=70, *args,**kwargs):
+    def __init__(self, phosphene_resolution=None, imsize=128, mode='edge-detection', edge_threshold=70, *args,**kwargs):
         """ @TODO
         - Extended image processing
         """
         self.mode = mode
-        self.thr_high = canny_threshold
-        self.thr_low  = canny_threshold // 2
+        self.thr_high = edge_threshold
+        self.thr_low  = edge_threshold // 2
         self.imsize = imsize
         if phosphene_resolution is not None:
             self.simulator = PhospheneSimulator(phosphene_resolution=(phosphene_resolution,phosphene_resolution),size=(imsize,imsize),
