@@ -187,8 +187,8 @@ def train(agent, environment, img_processing, optimizer, cfg):
 
 
         # Reset environment at start of episode
-        seed = torch.randint(250,(1,)).item()
-        _, _, _ = environment.setRandomSeed(seed)
+        # seed = torch.randint(250,(1,)).item()
+        # _, _, _ = environment.setRandomSeed(seed)
         _, _, _ = environment.reset(cfg['training_condition'])
 
         # Create an empty frame stack and fill it with frames
