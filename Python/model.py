@@ -28,38 +28,41 @@ class DQN(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
         return self.head(x.flatten(start_dim=1))
 
-    
+
 class AlexNet(nn.Module):
     def __init__(self, imsize, in_channels, out_channels,
-                 normalize_input=True, trainable_first_layers=None, trainable_last_layers=None):
+                 normalize_input=True, n_trainable_first_layers=None, n_trainable_last_layers=None):
         super(AlexNet, self).__init__()
-        
+
         # Load pretrained model
         self.model = torchvision.models.alexnet(pretrained=True)
 
-        # Replace last layer of classifier
-        self.model.classifier[-1] = nn.Linear(in_features=4096, out_features=out_channels,bias=True)
-
         # Freeze all parameters except those of the last layers / the first layers
+	# (Note that the very first and the very last layers are replaced, and thus set trainable) 
         for param in self.model.parameters():
             param.requires_grad = False
-            
-        if trainable_first_layers is not None:
-            for layer in trainable_first_layers:
-                param = self.model.features[layer].parameters()
-                param.requires_grad = True
-                
-        if trainable_last_layers is not None:
-            for layer in trainable_last_layers:
-                param = self.model.classifier[layer].parameters()
-                param.requires_grad = True
-            
-        
+
+        if n_trainable_first_layers is not None:
+            convlayers = [layer for layer in self.model.features if 'Conv' in layer._get_name()]
+            for layer in convlayers[:n_trainable_first_layers]:
+                for param in layer.parameters():
+                    param.requires_grad = True
+
+        if n_trainable_last_layers is not None:
+            fclayers = [layer for layer in self.model.features if 'Linear' in layer._get_name()]
+            for layer in fclayers[::-1][:n_trainable_last_layers]:
+                for param in layer.parameters():
+                    param.requires_grad = True
+
+        # Replace first and last layer of model
+        self.model.features[0] = nn.Conv2d(in_channels,64,kernel_size=(11,11),stride=(4,4),padding=(2,2))
+        self.model.classifier[-1] = nn.Linear(in_features=4096, out_features=out_channels,bias=True)
+
         # Normalization
         self.normalize_input = normalize_input
         if normalize_input:
-            self.normalizer = T.Normalize(mean = [0.485, 0.456, 0.406],std = [0.229, 0.224, 0.225])
-        
+            self.normalizer = lambda x, mean=0.445, std=0.269: (x - mean)/std # assuming (frame-stacked) greyscale images
+
         # Other settings (not used here)
         self.imsize = imsize
         self.in_channels = in_channels
@@ -67,19 +70,19 @@ class AlexNet(nn.Module):
 
     def forward(self, x):
         assert len(x.shape) == 4 # B, C, H, W
-        
+
         if self.normalize_input:
             x = self.normalizer(x)
-        
+
         if x.shape[-1]< 244:
-            x = nn.functional.interpolate(frame,size=244)
-            
+            x = nn.functional.interpolate(x,size=244)
+
         if x.shape[1] == 1:
             x = x.repeat(1,3,1,1)
-        
+
         return self.model(x).flatten(start_dim=1)
 
-   
+
 #replay memory
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -117,6 +120,7 @@ class DoubleDQNAgent():
                  gamma_discount = 0.999,
                  batch_size = 128,
                  device='cpu',
+                 pretrained_model = None,
                  *args,**kwargs):
 
         # DQNs
@@ -124,19 +128,19 @@ class DoubleDQNAgent():
         self.in_channels = in_channels
         self.n_actions   = n_actions
         self.device      = torch.device(device)
-        
-        
-        if 'pretrained_model' in kwargs.keys():
-            pretrained_model = kwargs['pretrained_model']
+
+
+        if pretrained_model is None:
+            self.policy_net = DQN(imsize, in_channels, n_actions).to(device)
+            self.target_net = DQN(imsize, in_channels, n_actions).to(device)
+        else:
             print('initializing with pretrained model: {}'.format(pretrained_model))
             if pretrained_model == 'AlexNet':
                 self.policy_net = AlexNet(imsize, in_channels, n_actions).to(device)
                 self.target_net = AlexNet(imsize, in_channels, n_actions).to(device)
             else:
-                raise NotImplmentedError
-                 
-        self.policy_net = DQN(imsize, in_channels, n_actions).to(device)
-        self.target_net = DQN(imsize, in_channels, n_actions).to(device)
+                raise NotImplementedError
+
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
