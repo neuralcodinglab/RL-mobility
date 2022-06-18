@@ -29,6 +29,7 @@ Train settings:
   RESET_END_IS_2: False # Wall collision
   RESET_END_IS_3: True # Reached step target
   RESET_AFTER_NR_SIDESTEPS: 5
+  EARLY_STOP_REWARD: -1000
 
 Environment:
   IMSIZE: 128

@@ -84,7 +84,9 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             if reward > 100:
                 reward = -(reward -100)
             reward *= cfg['reward_multiplier']
-
+            
+            if side_steps>cfg['reset_after_nr_sidesteps']:
+                reward = cfg['early_stop_reward']
 
             # 3. Store performance and training measures
             total_reward += reward;
@@ -214,6 +216,9 @@ def train(agent, environment, img_processing, optimizer, cfg):
             if reward > 100:
                 reward = -(reward -100)
             reward *= cfg['reward_multiplier']
+
+            if side_steps > cfg['reset_after_nr_sidesteps']:
+                reward = cfg['early_stop_reward']
 
             # 3. Push the transition to replay memory (in the right format & shape)
             reward = torch.tensor([reward], device=agent.device,dtype=torch.float)
