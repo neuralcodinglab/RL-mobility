@@ -55,7 +55,7 @@ def load_train_configs(yaml_file):
     return out.replace(['None'],[None]).replace([np.nan],[None]).set_index('model_name')
 
 ## Write replay memory to output videos
-def save_replay(replay_memory, filename, size):
+def save_replay(replay_memory, filename, size, Q_predictions=None):
     out = cv2.VideoWriter(filename,
                           cv2.VideoWriter_fourcc('M','J','P','G'),
                           2, size)
@@ -68,5 +68,17 @@ def save_replay(replay_memory, filename, size):
         frame = cv2.putText(frame,'action: {}'.format(action.item()),(0,10),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=0.35,color=(0,0,255))
+        
+        if Q_predictions is not None:
+            pred = Q_predictions[i] 
+            frame = cv2.putText(frame, 'Q^:{}'.format(pred[0].item()), ,(0,30),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.35,color=(0,0,255))
+            frame = cv2.putText(frame, 'Q<:{}'.format(pred[1].item()), ,(0,40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=0.35,color=(0,0,255))
+            frame = cv2.putText(frame, 'Q>:{}'.format(pred[2].item()), ,(0,50),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=0.35,color=(0,0,255))
         out.write(frame)
     out.release()
