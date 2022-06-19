@@ -71,13 +71,13 @@ def save_replay(replay_memory, filename, size, Q_predictions=None):
         
         if Q_predictions is not None:
             pred = Q_predictions[i] 
-            frame = cv2.putText(frame, 'Q^:{}'.format(pred[0].item()), ,(0,30),
+            frame = cv2.putText(frame, 'Q^:{:0.1f}'.format(pred[0][0].item()),(0,30),
                             cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale=0.35,color=(0,0,255))
-            frame = cv2.putText(frame, 'Q<:{}'.format(pred[1].item()), ,(0,40),
+            frame = cv2.putText(frame, 'Q<:{:0.1f}'.format(pred[0][1].item()),(0,40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 fontScale=0.35,color=(0,0,255))
-            frame = cv2.putText(frame, 'Q>:{}'.format(pred[2].item()), ,(0,50),
+            frame = cv2.putText(frame, 'Q>:{:0.1f}'.format(pred[0][2].item()),(0,50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 fontScale=0.35,color=(0,0,255))
         out.write(frame)
