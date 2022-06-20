@@ -52,6 +52,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
     total_reward = 0
     endless_loops = 0
     step_count = 0
+    fwd_steps = 0
 
 
     for seed in val_seeds:
@@ -68,6 +69,9 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             frame = img_processing(state_raw).to(agent.device)
             state = frame_stack.update_with(frame)
 
+        if cfg['dist_feedback']: # Additional channel encodes distance from start
+            state = torch.cat([state, torch.zeros_like(state)[0,0,:,:]], dim=1)
+
         side_steps = 0
 
         # Episode starts here:
@@ -79,6 +83,12 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             frame = img_processing(next_state_raw).to(agent.device)
             next_state = frame_stack.update_with(frame)
             side_steps = side_steps + 1  if action != 0 else 0
+
+            if action == 0:
+                fwd_steps += 1
+
+            if cfg['dist_feedback']: # Additional channel encodes distance from start
+                next_state = torch.cat([next_state,fwd_steps*torch.ones(1,1,cfg['imsize'],cfg['imsize'],device=cfg['device'])], dim=1)/cfg['n_target_steps']
 
             # 2. interpret reward
             if reward > 100:
