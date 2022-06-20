@@ -48,9 +48,11 @@ Agent:
   REPLAY_START_SIZE:  1500
   TARGET_UPDATE: 10 #episodes
   MEMORY_CAPACITY: 12000
+  IN_CHANNELS: 5
 
 Image processing:
   MODE: edge-detection # e.g. choose from ['edge-detection', 'camera-vision', 'no-vision']. Other modes not implemented yet
   PHOSPHENE_RESOLUTION: 42 #[42, 18]
   EDGE_THRESHOLD: #leave empty for default values
   DEPTH_THRESH:
+  DIST_FEEDBACK: True
