@@ -38,7 +38,7 @@ class AlexNet(nn.Module):
         self.model = torchvision.models.alexnet(pretrained=True)
 
         # Freeze all parameters except those of the last layers / the first layers
-	# (Note that the very first and the very last layers are replaced, and thus set trainable) 
+	# (Note that the very first and the very last layers are replaced, and thus set trainable)
         for param in self.model.parameters():
             param.requires_grad = False
 
@@ -125,19 +125,19 @@ class DoubleDQNAgent():
 
         # DQNs
         self.imsize      = imsize
-        self.in_channels = in_channels
+        self.in_channels = int(in_channels)
         self.n_actions   = n_actions
         self.device      = torch.device(device)
 
 
         if pretrained_model is None:
-            self.policy_net = DQN(imsize, in_channels, n_actions).to(device)
-            self.target_net = DQN(imsize, in_channels, n_actions).to(device)
+            self.policy_net = DQN(imsize, self.in_channels, n_actions).to(device)
+            self.target_net = DQN(imsize, self.in_channels, n_actions).to(device)
         else:
             print('initializing with pretrained model: {}'.format(pretrained_model))
             if pretrained_model == 'AlexNet':
-                self.policy_net = AlexNet(imsize, in_channels, n_actions).to(device)
-                self.target_net = AlexNet(imsize, in_channels, n_actions).to(device)
+                self.policy_net = AlexNet(imsize, self.in_channels, n_actions).to(device)
+                self.target_net = AlexNet(imsize, self.in_channels, n_actions).to(device)
             else:
                 raise NotImplementedError
 

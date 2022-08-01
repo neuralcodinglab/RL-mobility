@@ -35,7 +35,7 @@ import model
 import imgproc
 from model import Transition
 
-def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,253,254,255]):
+def validation_loop(agent,environment,img_processing, cfg, val_seeds=[246,247,248,249,250,251,252,253,254,255]):
     # # How to handle the different end signals
     # 16 feb 2021 previously:
     # RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
@@ -70,7 +70,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             state = frame_stack.update_with(frame)
 
         if cfg['dist_feedback']: # Additional channel encodes distance from start
-            state = torch.cat([state, torch.zeros_like(state)[0,0,:,:]], dim=1)
+            state = torch.cat([state, torch.zeros(1,1,cfg['imsize'],cfg['imsize'],device=cfg['device'])], dim=1)
 
         side_steps = 0
 
@@ -94,7 +94,7 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[251,252,25
             if reward > 100:
                 reward = -(reward -100)
             reward *= cfg['reward_multiplier']
-            
+
             if side_steps>cfg['reset_after_nr_sidesteps']:
                 reward = cfg['early_stop_reward']
 
@@ -184,7 +184,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         endless_loops = 0
         step_count = 0
         side_steps = 0 # Side-step counter (to prevent endless loops)
-
+        fwd_steps = 0 # Total forward step counter (for dist from start feedback)
 
         # Stop training after (either maximum number of steps or maximum number of episodes)
         if optimizer.optimization_count > cfg['max_optim_steps']:
@@ -210,6 +210,9 @@ def train(agent, environment, img_processing, optimizer, cfg):
             frame = img_processing(frame_raw).to(agent.device)
             state = frame_stack.update_with(frame)
 
+        if cfg['dist_feedback']: # Additional channel encodes distance from start
+            state = torch.cat([state, torch.zeros(1,1,cfg['imsize'],cfg['imsize'],device=cfg['device'])], dim=1)
+
         # Episode starts here:
         for t in count():
 
@@ -221,6 +224,13 @@ def train(agent, environment, img_processing, optimizer, cfg):
             agent_died = cfg['reset_end_is_{}'.format(end)] or side_steps > cfg['reset_after_nr_sidesteps']
             frame = img_processing(frame_raw).to(agent.device)
             next_state = frame_stack.update_with(frame) if not agent_died else None
+
+            if action == 0:
+                fwd_steps += 1
+
+            if cfg['dist_feedback'] and next_state is not None: # Additional channel encodes distance from start
+                next_state = torch.cat([next_state,fwd_steps*torch.ones(1,1,cfg['imsize'],cfg['imsize'],device=cfg['device'])], dim=1)/cfg['n_target_steps']
+
 
             # 2. Interpret reward signal
             if reward > 100:
