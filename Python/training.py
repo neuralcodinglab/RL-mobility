@@ -34,8 +34,9 @@ import utils
 import model
 import imgproc
 from model import Transition
+import testing
 
-def validation_loop(agent,environment,img_processing, cfg, val_seeds=[246,247,248,249,250,251,252,253,254,255]):
+def validation_loop(agent,environment,img_processing, cfg, val_seeds=np.arange(246,256)):
     # # How to handle the different end signals
     # 16 feb 2021 previously:
     # RESET_UPON_END_SIGNAL = {0:False,  # Nothing happened
@@ -73,7 +74,8 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[246,247,24
             state = torch.cat([state, torch.zeros(1,1,cfg['imsize'],cfg['imsize'],device=cfg['device'])], dim=1)
 
         side_steps = 0
-
+        previous_box_collisions = box_collisions
+        
         # Episode starts here:
         for t in count():
 
@@ -99,12 +101,14 @@ def validation_loop(agent,environment,img_processing, cfg, val_seeds=[246,247,24
                 reward = cfg['early_stop_reward']
 
             # 3. Store performance and training measures
-            total_reward += reward;
             if end == 1:
                 box_collisions += 1
             if end == 2:
                 wall_collisions +=1
-
+               
+            if  box_collisions == previous_box_collisions: #test for new collisions in this loop
+                total_reward += reward # Only count reward if not collided yet (in this loop)
+    
             # 4. the episode ends here after reaching step target or too many side steps
             if side_steps>cfg['reset_after_nr_sidesteps']:
                 endless_loops += 1
@@ -363,10 +367,18 @@ def main(config_file=None, specs_file=None):
         train_specs.loc[current_model, 'status'] = 'finished'
         train_specs.to_csv(specs_file)
         print('finished training')
-
-        # write replay memory to video
-        videopath = os.path.join(savedir,'{}.avi'.format(current_model))
-        utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
+        
+        # Testing 
+        results = testing.test(agent, environment, img_processing, cfg)
+        for metric, result  in results.items():
+            train_specs.loc[current_model,metric] = result # add each of the result metrics to the train_specs_dataframe
+        train_specs.to_csv(specs_file)
+        print('finished testing')
+        print(f'results are saved in {specs_file}')
+        
+#         # write replay memory to video
+#         videopath = os.path.join(savedir,'{}.avi'.format(current_model))
+#         utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
 
 
 if __name__ == "__main__":
