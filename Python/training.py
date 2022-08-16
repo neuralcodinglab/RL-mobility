@@ -135,7 +135,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
         writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['episode','step_count',
                          'wall_collisions', 'box_collisions',
-                         'endless_loops','reward', 'epsilon', 'train_loss', 'validation'])
+                         'endless_loops','reward', 'epsilon', 'train_loss', 'edge_threshold', 'validation'])
 
     # Counters
     wall_collisions = 0
@@ -150,6 +150,11 @@ def train(agent, environment, img_processing, optimizer, cfg):
     target_net_update_count = 0
 
     for episode in range(cfg['max_episodes']):
+        
+        if cfg['adaptive_threshold']:
+            edge_threshold = img_processing.canny.threshold.item()
+        else:
+            edge_threshold = cfg['edge_threshold']
 
         # Valdation loop
         if episode_reward > best_tr_reward:
@@ -160,7 +165,7 @@ def train(agent, environment, img_processing, optimizer, cfg):
             best_episode_so_far = False
             val_performance = validation_loop(agent,environment,img_processing,cfg)
             val_reward = val_performance[-1]
-            print('episode {}, step count: {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}'.format(episode,*val_performance))
+            print('episode {}, step count: {} wall_collisions: {}, box_collisions: {}, endless_loops: {}, total_reward: {}, threshold: {:0.4f}'.format(episode,*val_performance, edge_threshold))
 
             # Save best model
             if val_reward > best_reward:
@@ -171,14 +176,14 @@ def train(agent, environment, img_processing, optimizer, cfg):
             # Write validation performance to log file
             with open(cfg['logfile'], 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow([episode, *val_performance,0, 0, 1])
+                writer.writerow([episode, *val_performance,0, 0, edge_threshold, 1])
 
         # Write training performance to log file
         with open(cfg['logfile'], 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow([episode,step_count,
                              wall_collisions, box_collisions,
-                             endless_loops, episode_reward,agent.eps_threshold,total_loss, 0])
+                             endless_loops, episode_reward,agent.eps_threshold,total_loss, edge_threshold, 0])
 
         # Reset counters
         total_loss = 0 # COMMENT OUT TO REGISTER CUMULATIVE LOSS
@@ -355,7 +360,11 @@ def main(config_file=None, specs_file=None):
         torch.manual_seed(cfg['seed'])
         agent = model.DoubleDQNAgent(**cfg)
         img_processing = imgproc.ImageProcessor(**cfg)
-        optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
+        if cfg['adaptive_threshold']:
+            print("Using adaptive edge threshold") # TODO: this print statement can be removed
+            optimizer = optim.Adam([*img_processing.canny.parameters(), *agent.policy_net.parameters()], lr = cfg['lr_dqn'])
+        else:
+            optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
         environment =  pyClient.Environment(**cfg) if not environment_connected else environment # Only initialized on first run
 
         # # Training
