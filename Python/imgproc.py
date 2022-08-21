@@ -21,7 +21,11 @@ class FrameStack(object):
         return self.get()
 
     def get(self):
-        return torch.cat(self.stack, dim=1)
+        assert len(self.stack)>0
+        if type(self.stack[0]) == torch.Tensor:
+            return torch.cat(self.stack, dim=1) # Concatenate along channel dimension
+        else:
+            return self.stack
 
     def __len__(self):
         return len(self.stack)

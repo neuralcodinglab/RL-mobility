@@ -5,6 +5,41 @@ from collections import namedtuple
 import random
 import torchvision
 import torchvision.transforms as T
+import scikit_canny
+import numpy as np
+import imgproc
+
+class DifferentiableCannyLayer(nn.Module):
+    def __init__(self, sigma=1, threshold=0.47, adaptive_threshold=False, device='cuda:0'):
+        super(DifferentiableCannyLayer, self).__init__()
+        self.sigma = sigma
+        self.threshold = nn.Parameter(torch.tensor(threshold, device=device), requires_grad=adaptive_threshold)
+        self.device = device
+                 
+    def forward(self,x):
+        """ Takes B X C X W X H as input (Torch tensor or numpy array are supported). 
+        Each channel C is treated as a grayscale frame. Returns B X C X W X H torch tensor 
+        after processing the frames with Canny edge detection. """ 
+        assert len(x.shape) == 4
+        
+        if type(x) == torch.Tensor:
+            out = torch.zeros_like(x)
+            x = x.detach().cpu().numpy()
+        elif type(x) == np.ndarray:
+            out = torch.zeros(*x.shape, device=self.device)
+   
+        for B, observation in enumerate(x):
+            for C, frame in enumerate(observation):
+                magnitude, local_maxima = scikit_canny._canny(frame)
+                out[B,C] = torch.from_numpy(magnitude * local_maxima)
+        
+        out = out - self.threshold
+        binary = torch.heaviside(out, values=torch.zeros_like(out))
+        return out + binary.detach() - out.detach()  # (self-through estimator for binary threshold) 
+        
+
+    
+
 
 class DQN(nn.Module):
     def __init__(self, imsize, in_channels, out_channels):
@@ -107,7 +142,91 @@ class ReplayMemory(object):
     def __len__(self):
         return len(self.memory)
 
+class AdaptiveAgent():
+    def __init__(self, *args, **kwargs):
+        
+        # Base model (standard double DQN)
+        self.base = DoubleDQNAgent(*args,**kwargs)
+        self.__dict__.update(self.base.__dict__)
+        
+        # Additional first layers
+        self.canny_layer =  DifferentiableCannyLayer(sigma = 1.,
+                                                     threshold=kwargs['edge_threshold']/255,
+                                                     device=kwargs['device'] ,
+                                                     adaptive_threshold=kwargs['adaptive_threshold'])
+        self.simulator = imgproc.DifferentiablePhospheneSimulator((kwargs['phosphene_resolution'],kwargs['phosphene_resolution']),
+                                                          size=(kwargs['imsize'],kwargs['imsize']),
+                                                          jitter=0.25,intensity_var=0.9,sigma=0.60,intensity=1., 
+                                                          device=kwargs['device'])
+    def process_observation(self, observation, validation=False):
+        if validation: 
+            self.canny_layer.eval()
+        observation = self.simulator(self.canny_layer(observation))
+        self.canny_layer.train()
+        return observation
+        
+    def update_target_net(self):
+        self.base.update_target_net()
 
+    def select_action(self,observation, validation=False):
+        observation = self.process_observation(observation, validation=validation)
+        action = self.base.select_action(observation, validation=validation)
+        self.eps_threshold = self.base.eps_threshold
+        return action
+        
+    def forward(self):
+        """implementation from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html"""
+        if len(self.memory) < self.batch_size:
+            print(f"WARNING: memory contains {len(self.memory)} elements, requested batch size is {self.batch_size}")
+            return
+        transitions = self.memory.sample(self.batch_size)
+        # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
+        # detailed explanation). This converts batch-array of Transitions
+        # to Transition of batch-arrays.
+        batch = Transition(*zip(*transitions))
+
+        # Compute a mask of non-final states and concatenate the batch elements
+        # (a final state would've been the one after which simulation ended)
+        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
+                                              batch.next_state)), device=self.device, dtype=torch.bool)
+        non_final_next_states = [s for s in batch.next_state if s is not None]
+
+        # Concatenate (next) states into batch and process with canny and simulator
+        if type(batch.state[0]) == np.ndarray:
+            non_final_next_states = np.concatenate(non_final_next_states) if non_final_next_states else None
+            state_batch = np.concatenate(batch.state)
+        elif type(batch.state[0]) == torch.Tensor:
+            non_final_next_states = torch.cat(non_final_next_states) if non_final_next_states else None
+            state_batch = torch.cat(batch.state) 
+        if non_final_next_states is not None:
+            non_final_next_states = self.process_observation(non_final_next_states, validation=True) 
+        state_batch = self.process_observation(state_batch)
+
+        # Concatenate actions and rewards into batch
+        action_batch = torch.cat(batch.action)
+        reward_batch = torch.cat(batch.reward)
+
+        # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
+        # columns of actions taken. These are the actions which would've been taken
+        # for each batch state according to policy_net
+        state_action_values = self.policy_net(state_batch).gather(1, action_batch).squeeze()
+
+        # Compute V(s_{t+1}) for all next states.
+        # Expected values of actions for non_final_next_states are computed based
+        # on the "older" target_net; selecting their best reward with max(1)[0].
+        # This is merged based on the mask, such that we'll have either the expected
+        # state value or 0 in case the state was final.
+        next_state_values = torch.zeros(self.batch_size, device=self.device)
+        if non_final_next_states is not None:
+            next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
+        # Compute the expected Q values
+        expected_state_action_values = (next_state_values * self.gamma_discount) + reward_batch
+
+        return state_action_values, expected_state_action_values
+    
+        
+    
+    
 class DoubleDQNAgent():
     def __init__(self,
                  imsize=128,
