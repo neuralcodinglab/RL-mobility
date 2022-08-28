@@ -7,15 +7,21 @@ import torchvision
 import torchvision.transforms as T
 
 class DQN(nn.Module):
-    def __init__(self, imsize, in_channels, out_channels):
+    def __init__(self, imsize, in_channels, out_channels, batch_norm=True):
         super(DQN, self).__init__()
+        
         # Convulutional input layers
         self.conv1 = nn.Conv2d(in_channels, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
+        
+        # Batch normailization
+        self.batch_norm = batch_norm
+        if self.batch_norm:
+            self.bn1 = nn.BatchNorm2d(16)
+            self.bn2 = nn.BatchNorm2d(32)
+            self.bn3 = nn.BatchNorm2d(32)
+        
 
         # Fully connected output layer
         imsize = imsize if type(imsize) is tuple else (imsize,imsize)
@@ -23,9 +29,14 @@ class DQN(nn.Module):
         self.head = nn.Linear(n_hidden, out_channels)
 
     def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
+        if self.batch_norm:
+            x = F.relu(self.bn1(self.conv1(x)))
+            x = F.relu(self.bn2(self.conv2(x)))
+            x = F.relu(self.bn3(self.conv3(x)))
+        else:
+            x = F.relu(self.conv1(x))
+            x = F.relu(self.conv2(x))
+            x = F.relu(self.conv3(x))
         return self.head(x.flatten(start_dim=1))
 
 
@@ -111,7 +122,7 @@ class ReplayMemory(object):
 class DoubleDQNAgent():
     def __init__(self,
                  imsize=128,
-                 in_channels=4,
+                 in_channels=None,
                  n_actions=3,
                  memory_capacity=12000,
                  eps_start=0.95,
@@ -119,20 +130,25 @@ class DoubleDQNAgent():
                  eps_delta=(0.05-0.95)/4000,
                  gamma_discount = 0.999,
                  batch_size = 128,
+                 batch_norm = True,
                  device='cpu',
                  pretrained_model = None,
                  *args,**kwargs):
 
         # DQNs
         self.imsize      = imsize
-        self.in_channels = int(in_channels)
         self.n_actions   = n_actions
         self.device      = torch.device(device)
 
+        # Input channels (by default equal to stack size)
+        if in_channels is not None:
+            self.in_channels = int(in_channels)
+        else:
+            self.in_channels = int(kwargs['stack_size'])
 
         if pretrained_model is None:
-            self.policy_net = DQN(imsize, self.in_channels, n_actions).to(device)
-            self.target_net = DQN(imsize, self.in_channels, n_actions).to(device)
+            self.policy_net = DQN(imsize, self.in_channels, n_actions, batch_norm).to(device)
+            self.target_net = DQN(imsize, self.in_channels, n_actions, batch_norm).to(device)
         else:
             print('initializing with pretrained model: {}'.format(pretrained_model))
             if pretrained_model == 'AlexNet':
