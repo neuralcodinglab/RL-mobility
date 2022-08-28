@@ -364,9 +364,17 @@ def main(config_file=None, specs_file=None):
         train_specs.to_csv(specs_file)
         print('finished training')
 
+	# Testing 
+        results = testing.test(agent, environment, img_processing, cfg)
+        for metric, result  in results.items():
+            train_specs.loc[current_model,metric] = result # add each of the result metrics to the train_specs_dataframe
+        train_specs.to_csv(specs_file)
+        print('finished testing')
+        print(f'results are saved in {specs_file}')
+
         # write replay memory to video
-        videopath = os.path.join(savedir,'{}.avi'.format(current_model))
-        utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
+        #videopath = os.path.join(savedir,'{}.avi'.format(current_model))
+        #utils.save_replay(agent.memory.memory, videopath,(cfg['imsize'], cfg['imsize']))
 
 
 if __name__ == "__main__":
