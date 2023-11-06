@@ -5,6 +5,9 @@ import itertools
 import re
 import pandas as pd
 
+DEFAULTS = {'edge_threshold': 70,
+            'mode': 'edge-detection',
+            'imsize': 128, }
 
 class FrameStack(object):
     def __init__(self, stack_size=4, *args,**kwargs):
@@ -28,6 +31,14 @@ class ImageProcessor(object):
         """ @TODO
         - Extended image processing
         """
+
+        if imsize is None:
+            imsize = DEFAULTS['imsize']
+        if mode is None:
+            mode = DEFAULTS['mode']
+        if edge_threshold is None:
+            edge_threshold = DEFAULTS['edge_threshold']
+
         self.mode = mode
         self.thr_high = edge_threshold
         self.thr_low  = edge_threshold // 2
