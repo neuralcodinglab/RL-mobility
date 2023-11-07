@@ -7,7 +7,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple
 from itertools import count
-from IPython.display import Audio
 import csv
 
 import torch
@@ -38,7 +37,7 @@ def test(agent, environment, img_processing, cfg, store_replay=False, store_Q_pr
         def Q_hook(m, i, o):
             agent.Q_predictions.append(o)
         agent.policy_net.head.register_forward_hook(Q_hook)
-    
+
     # Counters
     wall_collisions = 0
     box_collisions = 0
@@ -88,13 +87,13 @@ def test(agent, environment, img_processing, cfg, store_replay=False, store_Q_pr
             box_collisions += 1
         if end == 2:
             wall_collisions +=1
-            
+
         if store_replay:
             # 4. Push the transition to replay memory (in the right format & shape)
             reward = torch.tensor([reward], device=agent.device,dtype=torch.float)
             action = action.unsqueeze(0)
             agent.memory.push(state, action, next_state, reward)
-        
+
         # The new state becomes the current state
         if next_state is not None:
             state = next_state.clone()
@@ -162,4 +161,4 @@ def test(agent, environment, img_processing, cfg, store_replay=False, store_Q_pr
 #             'cumulative_reward' :cumulative_reward}
 
 
-# TODO add argparser and main script (to test list of models at once) 
+# TODO add argparser and main script (to test list of models at once)

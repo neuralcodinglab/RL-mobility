@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from collections import namedtuple
 from itertools import count
 import csv
+import testing
 
 import torch
 import torch.nn as nn
@@ -352,6 +353,11 @@ def main(config_file=None, specs_file=None):
         img_processing = imgproc.ImageProcessor(**cfg)
         optimizer = optim.Adam(agent.policy_net.parameters(), lr = cfg['lr_dqn'])
         environment =  pyClient.Environment(**cfg) if not environment_connected else environment # Only initialized on first run
+
+        # Testing baseline (can be removed)
+        print(agent.in_channels)
+        results = testing.test(agent, environment, img_processing, cfg)
+        print(results)
 
         # # Training
         assert environment.client is not None, "Error: could not connect to env. Make sure to start Unity server first!"
