@@ -1,20 +1,20 @@
 # Numpy, OpenCV, os, sys
-import numpy as np
 import cv2
 import os, sys
 
 # Local files
-sys.path.insert(0,os.path.dirname(os.path.realpath(__file__)) + '/../')
+pathname = os.path.dirname(os.path.realpath(__file__)) + '/../'
+sys.path.insert(0,pathname)
 import pyClient
-import utils
-import imgproc
 
 # Connect to Unity environment
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
-port       = 13000       # Port number that the TCP/IP interface listens to
+port       = 12000       # Port number that the TCP/IP interface listens to
 size       = 128
+grayscale  = True
 screen_height = screen_width = size
-environment = pyClient.Environment(ip = ip, port = port, size = size)
+channels = 1 if grayscale else 16
+environment = pyClient.Environment(ip = ip, port = port, size = size, channels=channels)
 assert (environment.client is not None), "Please start Unity server environment first!"
 
 # reset the environment
@@ -36,30 +36,38 @@ disp = Window(windowname='Hallway', size=(600,600))
 # Initialize some phosphene simulations
 class Simulator():
     def __init__(self, low=(26,26),high=(60,60),**kwargs):
-        self.low_res  = imgproc.PhospheneSimulator(phosphene_resolution=low,**kwargs)
-        self.high_res = imgproc.PhospheneSimulator(phosphene_resolution=high,**kwargs)
+        # self.low_res  = imgproc.PhospheneSimulator(phosphene_resolution=low,**kwargs)
+        # self.high_res = imgproc.PhospheneSimulator(phosphene_resolution=high,**kwargs)
         self.sim_mode = 0
 
     def __call__(self,frame):
         if self.sim_mode==0:
-            return frame[:,:,::-1].astype('uint8')
+            if grayscale:
+                return frame
+            else:
+                return frame[:,:,::-1].astype('uint8')
         elif self.sim_mode == 1:
-            frame = cv2.resize(frame, (480,480))
-            contours = cv2.Canny(frame,35,70)
-            phosphenes = self.low_res(contours)
-            return (255*phosphenes/phosphenes.max()).astype('uint8')
+            raise NotImplementedError
+            # frame = cv2.resize(frame, (480,480))
+            # contours = cv2.Canny(frame,35,70)
+            # phosphenes = self.low_res(contours)
+            # return (255*phosphenes/phosphenes.max()).astype('uint8')
         elif self.sim_mode == 2:
-            frame = cv2.resize(frame, (480,480))
-            contours = cv2.Canny(frame,35,70)
-            phosphenes = self.high_res(contours)
-            return (255*phosphenes/phosphenes.max()).astype('uint8')
+            raise NotImplementedError
+            # frame = cv2.resize(frame, (480,480))
+            # contours = cv2.Canny(frame,35,70)
+            # phosphenes = self.high_res(contours)
+            # return (255*phosphenes/phosphenes.max()).astype('uint8')
 
 simulator = Simulator(low=(26,26),high=(60,60),sigma=1.2)
 
 while environment.client:
 
     # Display current state
-    frame = simulator(state_raw['colors'])
+    if grayscale:
+        frame = simulator(state_raw['grayscale'])
+    else:
+        frame = simulator(state_raw['colors'])
     disp.show(frame)
 
     # Get key
