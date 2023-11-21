@@ -11,7 +11,7 @@ import imgproc
 
 # Connect to Unity environment
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
-port       = 13000       # Port number that the TCP/IP interface listens to
+port       = 12000       # Port number that the TCP/IP interface listens to
 size       = 128
 screen_height = screen_width = size
 environment = pyClient.Environment(ip = ip, port = port, size = size)

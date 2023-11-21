@@ -16,14 +16,14 @@ MonoBehaviour:
   _width: 128
   _height: 128
   _ipAddress: 127.0.0.1
-  _port: 13000
-  _clientConnected: 0
+  _port: 12000
+  _clientConnected: 1
   _forwardStepReward: 10
   _sideStepReward: 101
   _boxBumpReward: 120
   _wallBumpReward: 115
   _targetReachedReward: 10
-  _randomSeed: 0
+  _randomSeed: -1327273644
   _maxSteps: 100
   _forwardSpeed: 0.5
   _sideStepDistance: 0.95
