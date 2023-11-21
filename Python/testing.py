@@ -49,7 +49,7 @@ def test(agent, environment, img_processing, cfg, store_replay=False, store_Q_pr
 
 
     # Reset environment at start of episode
-    _, _, _ = environment.reset(cfg['training_condition'])
+    _, _, _ = environment.reset(cfg['training_condition']+2)
 
     # Create an empty frame stack and fill it with frames
     frame_stack = imgproc.FrameStack(stack_size=cfg['stack_size'] )

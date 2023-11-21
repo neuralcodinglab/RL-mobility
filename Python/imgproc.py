@@ -29,8 +29,9 @@ class ImageProcessor(object):
         - Extended image processing
         """
         self.mode = mode
-        self.thr_high = edge_threshold
-        self.thr_low  = edge_threshold // 2
+        if edge_threshold is not None:
+            self.thr_high = edge_threshold
+            self.thr_low  = edge_threshold // 2
         self.imsize = imsize
         if phosphene_resolution is not None:
             self.simulator = PhospheneSimulator(phosphene_resolution=(int(phosphene_resolution),int(phosphene_resolution)),

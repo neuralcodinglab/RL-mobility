@@ -11,7 +11,7 @@ import pyClient
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
 port       = 12000       # Port number that the TCP/IP interface listens to
 size       = 128
-grayscale  = True
+grayscale  = False
 screen_height = screen_width = size
 channels = 1 if grayscale else 16
 environment = pyClient.Environment(ip = ip, port = port, size = size, channels=channels)
@@ -85,7 +85,7 @@ while environment.client:
         print('action: {}, reward: {}, end {}'.format(0, reward, end))
 
     if key == ord('r'):
-        end, reward, state_raw = environment.reset()
+        end, reward, state_raw = environment.reset(2)
         print('action: {}, reward: {}, end {}'.format(0, reward, end))
 
     if key == 49:

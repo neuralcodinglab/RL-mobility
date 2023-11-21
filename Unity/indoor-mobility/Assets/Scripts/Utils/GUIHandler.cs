@@ -95,7 +95,7 @@ namespace indoorMobility.Scripts.Utils
             trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
             maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
             lightingSlider.GetComponent<Slider>().value = appData.LightIntensity * 10;
-            grayscaleToggle.isOn = appData.Grayscale;
+            // grayscaleToggle.isOn = appData.Grayscale;
         }
     }
 }
