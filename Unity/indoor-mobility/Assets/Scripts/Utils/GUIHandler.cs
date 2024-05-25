@@ -23,6 +23,7 @@ namespace indoorMobility.Scripts.Utils
         [SerializeField] private Text portStatus;
         [SerializeField] private Text seedStatus;
         [SerializeField] private Text clientStatus;
+        [SerializeField] private Toggle grayscaleToggle; 
 
 
         // Store values from input field in appData
@@ -34,6 +35,7 @@ namespace indoorMobility.Scripts.Utils
         public void ChangeWall() => appData.WallBumpReward = (byte) int.Parse(wallField.GetComponent<InputField>().text);
         public void ChangeTarget() => appData.TargetReachedReward = (byte)int.Parse(trgField.GetComponent<InputField>().text);
         public void ChangeMaxSteps() => appData.MaxSteps = int.Parse(maxStepsField.GetComponent<InputField>().text);
+        public void ChangeGrayscaleToggle() => appData.Grayscale = grayscaleToggle.isOn;  
         public void ChangeLightingSlider(){
             appData.LightIntensity = lightingSlider.GetComponent<Slider>().value / 10;
             lightingSliderValue.GetComponent<Text>().text = "Light Intensity: " + appData.LightIntensity;
@@ -75,6 +77,7 @@ namespace indoorMobility.Scripts.Utils
             wallField.GetComponent<InputField>().text = null;
             trgField.GetComponent<InputField>().text = null;
             maxStepsField.GetComponent<InputField>().text = null;
+            grayscaleToggle.isOn = true;
 
             // Update the placeholders according to values in appData
             Start();
@@ -92,6 +95,7 @@ namespace indoorMobility.Scripts.Utils
             trgField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = ((int)appData.TargetReachedReward).ToString();
             maxStepsField.GetComponent<InputField>().placeholder.GetComponent<Text>().text = appData.MaxSteps.ToString();
             lightingSlider.GetComponent<Slider>().value = appData.LightIntensity * 10;
+            // grayscaleToggle.isOn = appData.Grayscale;
         }
     }
 }

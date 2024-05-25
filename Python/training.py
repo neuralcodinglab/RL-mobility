@@ -34,6 +34,7 @@ import utils
 import model
 import imgproc
 from model import Transition
+import testing
 
 def validation_loop(agent,environment,img_processing, cfg, val_seeds=[246,247,248,249,250,251,252,253,254,255]):
     # # How to handle the different end signals

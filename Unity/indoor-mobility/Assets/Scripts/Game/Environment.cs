@@ -40,9 +40,44 @@ namespace indoorMobility.Scripts.Game
 
         public byte[] Output { //output to python: 1 byte to determine if the loop ended, 1 byte for the reward and 16 x w x h bytes with the camera view of the agent (state)
             get {
+                // Store first two bytes 
                 _data[0] = _end;
                 _data[1] = _reward;
+                
+                // Store state in remaining bites
+                if (appData.Grayscale)
+                    GetSingleChannelStateData();
+                else 
+                    GetFullStateData();
+                return _data;
+            }
+        }
 
+        public void GetSingleChannelStateData()
+        {
+            // Render
+            var cam = ImgSynthesis.capturePasses[0].camera;
+            RenderTexture.active = _targetTexture; //renderRT;
+            cam.targetTexture = _targetTexture; // renderRT;
+            cam.Render();
+            
+            // Read pixels
+            var tex = new Texture2D(appData.Width, appData.Height);
+            tex.ReadPixels(new Rect(0, 0, _targetTexture.width, _targetTexture.height), 0, 0);
+            tex.Apply();
+
+            var colors_rgb = tex.GetPixels();
+           
+            for (var y = 0; y < appData.Height; y++)
+            for (var x = 0; x < appData.Width; x++) {
+                var i = (x - y * appData.Width + (appData.Height - 1) * appData.Width);
+                var j = (x + y * appData.Width);
+                _data[i + 2]  = (byte) (255*colors_rgb[j].grayscale);
+            }
+        }
+
+        public void GetFullStateData()
+        {
                 // Render the state (for the different render types: colors, semantic segmentation, depth, etc.)
                 var tex = new Texture2D(appData.Width, appData.Height);
                 _state = new List<Color32[]>();
@@ -70,12 +105,8 @@ namespace indoorMobility.Scripts.Game
                 var flow    = _state.ElementAt(5);
                 
                 // Write state to _data
-                for (var y = 0;
-                    y < appData.Height;
-                    y++)
-                    for (var x = 0;
-                        x < appData.Width;
-                        x++) {
+                for (var y = 0; y < appData.Height; y++)
+                    for (var x = 0; x < appData.Width; x++) {
                         var i = 16 * (x - y * appData.Width + (appData.Height - 1) * appData.Width);
                         var j = 1 * (x + y * appData.Width);
                         _data[i + 2]  = colors[j].r;
@@ -94,11 +125,7 @@ namespace indoorMobility.Scripts.Game
                         _data[i + 15] = flow[j].g;
                         _data[i + 16] = flow[j].b;
                         _data[i + 17] = depth[j].r;
-
                     }
-
-                return _data;
-            }
         }
 
         #endregion;
@@ -155,7 +182,10 @@ namespace indoorMobility.Scripts.Game
             imgSynthesis = _camera.GetComponent<ImgSynthesis>();
             
             // Output data
-            _data = new byte[2 + 16 * appData.Width * appData.Height];
+            if (appData.Grayscale)
+                _data = new byte[2 + 1 * appData.Width * appData.Height];
+            else
+                _data = new byte[2 + 16 * appData.Width * appData.Height];
         }
 
         #endregion;

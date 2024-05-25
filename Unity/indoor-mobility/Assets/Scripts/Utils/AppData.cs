@@ -10,10 +10,12 @@ namespace indoorMobility.Scripts.Utils
         [SerializeField] private float _timescale;  // time scale for physics update (default: 1)
         [SerializeField] private int _width;        // image width (for state)
         [SerializeField] private int _height;       // image height (for state)
-
+        [SerializeField] private bool _grayscale;   // whether state should be returned only as 1 channel grayscale img 
+        
         public float TimeScale { get => _timescale; set => _timescale = value; }
         public int Width {get => _width; set => _width = value;}
         public int Height {  get => _height; set => _height = value; }
+        public bool Grayscale { get => _grayscale; set => _grayscale = value; }
         #endregion
 
         // Server data 
@@ -74,6 +76,7 @@ namespace indoorMobility.Scripts.Utils
             _ipAddress = "127.0.0.1";
             _port =  13000;
             _clientConnected = false;
+            _grayscale = true;
 
             // Rewards
             _forwardStepReward = (byte)10;

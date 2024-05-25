@@ -15,15 +15,16 @@ MonoBehaviour:
   _timescale: 1
   _width: 128
   _height: 128
+  _grayscale: 1
   _ipAddress: 127.0.0.1
   _port: 12000
-  _clientConnected: 1
+  _clientConnected: 0
   _forwardStepReward: 10
   _sideStepReward: 101
   _boxBumpReward: 120
   _wallBumpReward: 115
   _targetReachedReward: 10
-  _randomSeed: -1327273644
+  _randomSeed: -2050765970
   _maxSteps: 100
   _forwardSpeed: 0.5
   _sideStepDistance: 0.95

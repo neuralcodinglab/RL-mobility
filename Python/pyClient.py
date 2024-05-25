@@ -36,6 +36,10 @@ class Environment:
         return end, reward, state
 
     def state2arrays(self,state):
+        if self.channels == 1:
+            state = np.array(state, "uint8").reshape(self.size, self.size)
+            return {'grayscale': state}
+
         if self.channels == 3:
             return {'colors' : self.state2usableArray(state),}
 
