@@ -1,0 +1,1 @@
+The training results are not included in the github repository but can be downloaded via this link: https://surfdrive.surf.nl/files/index.php/s/m7575dnzNT7ouTe
