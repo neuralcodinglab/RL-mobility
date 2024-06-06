@@ -2,6 +2,10 @@
 import cv2
 import os, sys
 
+# Local modules (in parent folder)
+sys.path.append('./..')
+import imgproc
+
 # Local files
 pathname = os.path.dirname(os.path.realpath(__file__)) + '/../'
 sys.path.insert(0,pathname)
@@ -9,7 +13,7 @@ import pyClient
 
 # Connect to Unity environment
 ip         = "127.0.0.1" # Ip address that the TCP/IP interface listens to
-port       = 12000       # Port number that the TCP/IP interface listens to
+port       = 13000       # Port number that the TCP/IP interface listens to
 size       = 128
 grayscale  = False
 screen_height = screen_width = size
@@ -32,12 +36,11 @@ class Window:
 
 disp = Window(windowname='Hallway', size=(600,600))
 
-
 # Initialize some phosphene simulations
 class Simulator():
     def __init__(self, low=(26,26),high=(60,60),**kwargs):
-        # self.low_res  = imgproc.PhospheneSimulator(phosphene_resolution=low,**kwargs)
-        # self.high_res = imgproc.PhospheneSimulator(phosphene_resolution=high,**kwargs)
+        self.low_res  = imgproc.PhospheneSimulator(phosphene_resolution=low,**kwargs)
+        self.high_res = imgproc.PhospheneSimulator(phosphene_resolution=high,**kwargs)
         self.sim_mode = 0
 
     def __call__(self,frame):
@@ -47,17 +50,15 @@ class Simulator():
             else:
                 return frame[:,:,::-1].astype('uint8')
         elif self.sim_mode == 1:
-            raise NotImplementedError
-            # frame = cv2.resize(frame, (480,480))
-            # contours = cv2.Canny(frame,35,70)
-            # phosphenes = self.low_res(contours)
-            # return (255*phosphenes/phosphenes.max()).astype('uint8')
+            frame = cv2.resize(frame, (480,480))
+            contours = cv2.Canny(frame,35,70)
+            phosphenes = self.low_res(contours)
+            return (255*phosphenes/phosphenes.max()).astype('uint8')
         elif self.sim_mode == 2:
-            raise NotImplementedError
-            # frame = cv2.resize(frame, (480,480))
-            # contours = cv2.Canny(frame,35,70)
-            # phosphenes = self.high_res(contours)
-            # return (255*phosphenes/phosphenes.max()).astype('uint8')
+            frame = cv2.resize(frame, (480,480))
+            contours = cv2.Canny(frame,35,70)
+            phosphenes = self.high_res(contours)
+            return (255*phosphenes/phosphenes.max()).astype('uint8')
 
 simulator = Simulator(low=(26,26),high=(60,60),sigma=1.2)
 
